@@ -1,0 +1,25 @@
+{
+  "name": "ats-cv-scoring",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @ats/web",
+    "dev:api": "npm run dev --workspace @ats/api",
+    "build": "npm run build --workspace @ats/core && npm run build --workspace @ats/web && npm run build --workspace @ats/api",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b",
+    "check:privacy": "node scripts/check-privacy.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

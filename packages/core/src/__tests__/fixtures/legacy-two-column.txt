@@ -1,0 +1,71 @@
+Alex Rivera Santos
+Product Designer with 7+ years of experience designing digital products across travel,
+e-fintech, logistics, and B2B platforms. Strong at translating business complexity into
+clear, scalable user experiences. Experienced in end-to-end product design, cross-
+functional collaboration, and data-informed decision making across global teams.
+
+Portfolio      LinkedIn     Email
+
+
+Product Designer at Vela & VelaPro                                                                   Sk   ills
+Singapore (Remote), Oct 2023 - Present                                                               Product Design
+     Lead end to end product design for VelaPro, B2B travel platform supporting flights, hotels,     Product Strategy
+      expense management & insights.
+                                                                                                     UX/U     I Design
+     Designed and shipped key features such as flight & hotel booking, AI features, insight and
+                                                                                                     Interaction Design
+      expense management & reimbursement.
+                                                                                                     Design Thinking
+     Partner closely with Product Managers, Engineer, and CTOs to align design decisions with
+                                                                                                     Visual Design
+      business goals, technical constraints, and delivery timelines.
+                                                                                                     Prototyping
+     Maintain design system within the design and the codebase to ensure consistency, scalability,
+     and faster iteration across products.                                                           Wireframing
+                                                                                                     UX    Research
+Product Designer at Meridian Logistics                                                               Design System
+Jakarta, May 2022 - August 2023                                                                      Illustration
+     Designed and shipped Meridian’s TMS (Transporter Monitoring System) for Last Mile, from Order      Branding
+      Management to its Fleet Management and Monitoring. Improving the overall productivity by
+      approximately 1.5x                                                                             Stack
+     Advocate Meridian’s product roadmap through conducting design research and insights delivery.
+                                                                                                     React
+     Facilitate collaboration between cross functional teams through ideation workshop and co-
+                                                                                                     TailwindCSS
+      designing, to ensure alignment between stakeholders.
+                                                                                                     Javascript, Typescript
+     Improve and maintain Meridian’s design system for multi-platform purpose.
+                                                                                                     N   ext.js
+Product Designer at Lumen
+                                                                                                     Tools
+Jakarta, May 2021 - May 2022
+     Designed and shipped Lu men Business (formerly Kite) product experience, from it’s homepage,    Figma
+      high-yield saving account features, and improved account verification flow.                    Visual Studio Code
+     Collaborate with Product Managers, Researcher, Designer, and Engineer throughout all stages     Framer
+      of design process to ensure desirability, feasibility, and viability of design solutions.      Webflow
+     Conduct evaluative research, from concept testing to usability studies, to gather users         N   otion
+      feedback and inform design decision.                                                           G   ithub
+                                                                                                     Lottiefiles
+Product Designer at Vertex
+                                                                                                     Jitter
+Jakarta, May 2021 - May 2022
+                                                                                                     ProtoPie
+     Led & run end-to-end design process, from conducting discovery research, ideation workshop,
+      and design implementation, in order to redesign a better marketplace experience                Miro
+      (clientsite.com) and Vertex’s internal tools.                                                    Claude Code
+     Built the first version of design system for the company.                                       Midjourney
+
+ndependent Product Designer
+I                                                                                                    Language
+Remote, May 2019 - May 2025                                                                          English
+     Delivered product design solutions for 80+ projects and 8+ startups, working with local &       Indonesian
+      international clients across multiple industries
+     Collaborated with multiple stakeholders including founders, product managers, and
+      developers, applying design thinking to solve business and user problems.
+     Clients include : Northwind, Paycove, Tidewater, Almanac, Orbit AI, Kestrel and more
+
+
+E   ducation
+Riverside University, Bachelor of Engineering (majoring in Civil Engineering)
+Sep 2015 - Jul 2019
+

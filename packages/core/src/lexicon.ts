@@ -1,0 +1,194 @@
+/**
+ * Vocabulary the scorer reasons with. Kept in plain lists so the rubric can be argued
+ * with directly — every term here is visible, none of it is learned or hidden.
+ *
+ * Field-specific vocabulary lives in domains.ts, one pack per field. This file holds the
+ * parts that apply to any CV in any profession.
+ */
+import { ALL_TERMS } from './domains.js';
+
+/** Words that carry no signal when ranking job-description terms by frequency. */
+export const STOP_WORDS = new Set<string>(
+  `a about above after again against all am an and any are as at be because been before being below
+   between both but by cannot could did do does doing down during each few for from further had has
+   have having he her here hers herself him himself his how i if in into is it its itself me more
+   most my myself no nor not of off on once only or other ought our ours ourselves out over own same
+   she should so some such than that the their theirs them themselves then there these they this
+   those through to too under until up very was we were what when where which while who whom why
+   with would you your yours yourself yourselves will can may must shall etc via across within upon
+   also just like well able role team teams work working works join looking seeking ideal strong
+   great good excellent ability responsibilities requirements qualifications preferred plus bonus
+   nice years year experience experienced including include includes company companies candidate
+   candidates applicant apply application job position opportunity benefits salary equal employer
+   diversity inclusive new help make making made using use used ensure ensuring drive driving
+   deliver delivering build building create creating support supporting our you we us your their
+   this that will who what where when how why role roles hire hiring team teams
+   linkedin indeed glassdoor monster ziprecruiter workday greenhouse lever
+   applicants applicant applying applied save saved share report flag alert alerts
+   posted ago days weeks months seen viewed click here more show less back next
+   sign signin login register subscribe newsletter cookies privacy terms accept`
+    .split(/\s+/)
+    .filter(Boolean),
+);
+
+/**
+ * Every term the scorer knows, across every field. `jobMatch` narrows this to the packs
+ * a posting is actually about; the full list is the fallback when there is no posting.
+ * To teach it a new profession, add a pack in domains.ts — nothing here needs changing.
+ */
+export const LEXICON: string[] = ALL_TERMS;
+
+export const LEXICON_SET = new Set(LEXICON);
+
+/**
+ * Any member found in the resume satisfies the whole group. This is what stops the
+ * scanner punishing a CV for saying "usability studies" when the posting said
+ * "usability testing" — the failure mode that makes most online scanners untrustworthy.
+ *
+ * British and American spellings are grouped throughout, because a CV should never be
+ * marked down for which side of the Atlantic it was written on.
+ */
+export const SYNONYM_GROUPS: string[][] = [
+  // universal
+  ['stakeholder management', 'stakeholders', 'stakeholder', 'stakeholder engagement'],
+  ['team leadership', 'people management', 'line management', 'team management'],
+  ['mentoring', 'mentorship', 'mentor', 'coaching'],
+  ['project management', 'programme management', 'program management'],
+  ['prioritisation', 'prioritization', 'prioritising', 'prioritizing'],
+  ['optimisation', 'optimization', 'optimising', 'optimizing'],
+  ['organisation', 'organization', 'organisational', 'organizational'],
+  ['analyse', 'analyze', 'analysis', 'analytical'],
+  ['budget management', 'budgeting', 'budget'],
+  ['process improvement', 'continuous improvement', 'lean', 'kaizen'],
+  ['cross-functional', 'cross functional', 'multidisciplinary', 'multi-disciplinary'],
+  ['communication', 'communications', 'written communication', 'verbal communication'],
+  ['customer service', 'customer support', 'client service'],
+  ['data analysis', 'data analytics', 'analytics'],
+  ['reporting', 'reports', 'report writing'],
+  ['compliance', 'regulatory compliance', 'governance'],
+  ['training', 'training and development', 'learning and development'],
+  ['agile', 'scrum', 'kanban'],
+  ['kpi', 'kpis', 'okr', 'okrs', 'metrics'],
+  // design
+  ['ux research', 'user research', 'design research', 'research'],
+  ['usability testing', 'user testing', 'usability study', 'usability studies'],
+  ['design system', 'design systems'],
+  ['ux/ui', 'ui/ux', 'ux design', 'ui design', 'user interface design', 'user experience design'],
+  ['wireframes', 'wireframing', 'wireframe'],
+  ['prototype', 'prototyping', 'prototypes'],
+  ['a11y', 'accessibility', 'inclusive design'],
+  ['design handoff', 'developer handoff', 'engineering handoff', 'handoff'],
+  ['critique', 'design critique', 'crit'],
+  ['component library', 'component libraries', 'components'],
+  ['responsive design', 'responsive'],
+  // engineering
+  ['front-end', 'frontend', 'front end'],
+  ['back-end', 'backend', 'back end'],
+  ['full stack', 'full-stack', 'fullstack'],
+  ['ci/cd', 'continuous integration', 'continuous delivery', 'continuous deployment'],
+  ['test automation', 'automated testing', 'unit testing', 'integration testing'],
+  ['next.js', 'nextjs'],
+  ['node.js', 'nodejs', 'node'],
+  ['api design', 'api', 'apis', 'rest', 'restful'],
+  ['google cloud', 'gcp'],
+  // shared
+  ['end to end', 'end-to-end', '0 to 1', '0-to-1', 'zero to one'],
+  ['b2b', 'business to business', 'enterprise'],
+  ['saas', 'software as a service'],
+  ['data-driven', 'data driven', 'data-informed', 'data informed'],
+  ['product roadmap', 'roadmap'],
+  ['ai', 'artificial intelligence', 'generative ai', 'llm', 'machine learning'],
+  ['experimentation', 'a/b testing', 'ab testing', 'split testing'],
+  ['crm', 'salesforce', 'hubspot'],
+  ['erp', 'sap', 'oracle', 'netsuite'],
+  ['financial reporting', 'financial statements', 'management accounts'],
+  ['recruitment', 'talent acquisition', 'hiring', 'sourcing'],
+  ['patient care', 'clinical care', 'care delivery'],
+  ['curriculum development', 'lesson planning', 'schemes of work'],
+];
+
+/**
+ * Verbs that open a strong bullet, across professions — a nurse administers, a lawyer
+ * drafts, an electrician installs. Scoring only the vocabulary of one industry is how a
+ * checker ends up telling a teacher their CV is badly written.
+ */
+export const ACTION_VERBS = new Set<string>(
+  `led lead leads managed manage directed direct headed oversaw supervised coordinated
+   designed design shipped ship built build created create developed develop drove drives
+   launched launch delivered deliver owned own ran run operated executed implemented
+   improved improve increased increase reduced reduce cut grew grow scaled scale
+   redesigned rebuilt refactored migrated modernised modernized upgraded consolidated
+   defined define established set shaped streamlined simplified standardised standardized
+   automated introduced initiated founded launched pioneered spearheaded championed
+   partnered collaborated facilitated coordinated liaised negotiated influenced advised
+   consulted presented reported communicated documented published authored wrote drafted
+   edited translated localised localized researched investigated analysed analyzed
+   evaluated assessed audited reviewed inspected tested validated verified diagnosed
+   troubleshot resolved solved fixed repaired maintained serviced installed configured
+   deployed monitored optimised optimized tuned secured protected
+   taught trained mentored coached tutored instructed supervised onboarded
+   treated cared nursed administered assessed screened counselled counseled prescribed
+   forecast forecasted budgeted reconciled processed calculated invoiced billed
+   sold closed prospected generated acquired retained upsold converted
+   recruited hired sourced interviewed staffed scheduled planned organised organized
+   procured sourced purchased negotiated shipped stocked tracked measured
+   achieved exceeded surpassed won secured earned awarded accelerated eliminated
+   enabled supported assisted served handled`
+    .split(/\s+/)
+    .filter(Boolean),
+);
+
+export const WEAK_OPENERS = [
+  'responsible for',
+  'worked on',
+  'helped with',
+  'assisted in',
+  'tasked with',
+  'duties included',
+  'participated in',
+  'involved in',
+  'in charge of',
+  'my role was',
+];
+
+/**
+ * Probe words for split-word detection. If a probe appears in the text with all spaces
+ * removed but not in the text as written, the file is breaking words apart ("Sk ills",
+ * "E ducation"). These are words that appear on a CV in any field — using design tool
+ * names here meant the check barely fired for anyone else.
+ */
+export const PROBE_WORDS = `skills education experience summary profile projects certifications
+  languages references achievements employment history qualifications training awards
+  volunteer publications interests university college bachelor master degree diploma
+  manager engineer developer designer analyst director coordinator specialist consultant
+  assistant administrator supervisor technician officer executive associate nurse teacher
+  accountant solicitor researcher marketing operations finance sales support strategy
+  leadership responsibilities professional personal contact present current company`
+  .split(/\s+/)
+  .filter(Boolean);
+
+/**
+ * Headings a parser looks for when it decides where each section starts. Widened well
+ * past the three a design CV happens to use — certifications and licences are the whole
+ * ballgame in nursing, law and the trades.
+ */
+export const SECTION_PATTERNS = {
+  experience:
+    /^\s*(work\s+|professional\s+|relevant\s+|employment\s+|career\s+|clinical\s+|teaching\s+)?(experience|history|employment|background|appointments)\s*:?\s*$/im,
+  education:
+    /^\s*(education(\s+(and|&)\s+\w+)?|academic\s+(background|history|qualifications)|qualifications)\s*:?\s*$/im,
+  skills:
+    /^\s*(core\s+|key\s+|technical\s+|professional\s+|clinical\s+|it\s+)?(skills|competencies|expertise|toolkit|proficiencies|capabilities|strengths)\s*:?\s*$/im,
+  summary:
+    /^\s*(professional\s+|career\s+|executive\s+|personal\s+)?(summary|profile|objective|about( me)?|statement|overview)\s*:?\s*$/im,
+  certifications:
+    /^\s*(certifications?|licences?|licenses?|accreditations?|credentials|registrations?|memberships?)\s*:?\s*$/im,
+  projects: /^\s*(key\s+|selected\s+|notable\s+)?(projects|portfolio|case studies|publications|research)\s*:?\s*$/im,
+} as const;
+
+export const BANDS = [
+  { key: 'strong' as const, min: 80, label: 'Strong', advice: 'This reads cleanly and lines up with the posting. Send it.' },
+  { key: 'nearly' as const, min: 65, label: 'Nearly there', advice: 'It will read fine, but you are missing matches you could have. Fix the items below.' },
+  { key: 'needs-work' as const, min: 45, label: 'Needs work', advice: 'Some of this comes through and some of it gets lost. Fix the failed checks before you apply.' },
+  { key: 'high-risk' as const, min: 0, label: 'High risk', advice: 'Important details are being lost. Rebuild the file before you send it anywhere.' },
+];

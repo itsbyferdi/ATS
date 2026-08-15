@@ -1,0 +1,138 @@
+Alex Rivera Santos
+
+Senior Product Designer
+
+Jakarta, Indonesia | Open to relocation to Singapore
+
+hello@alexrivera.com | [+62 XXX-XXXX-XXXX]
+
+Portfolio: alexrivera.com | LinkedIn: linkedin.com/in/[your-handle]
+
+PROFESSIONAL SUMMARY
+
+Product designer with 7+ years of experience in B2B SaaS, travel
+technology, fintech, and logistics. Leads end-to-end product design,
+from discovery research to shipped interface, on remote cross-functional
+teams in Singapore and Indonesia. Builds and maintains design systems in
+Figma and in code with React, TypeScript, and Tailwind CSS. Translates
+complex business and operational problems into clear, scalable user
+experiences.
+
+CORE SKILLS
+
+Product Design: End-to-end product design, product strategy, interaction
+design, information architecture, user flows, wireframing, prototyping,
+visual design, responsive and mobile design (iOS, Android),
+accessibility (WCAG)
+
+Research and Data: User research, discovery research, usability testing,
+concept testing, A/B testing, product analytics, data-informed design,
+journey mapping, workshop facilitation
+
+Design Systems: Design system architecture, design tokens, component
+libraries, multi-platform design systems, design-to-engineering handoff,
+documentation
+
+Collaboration: Cross-functional collaboration, stakeholder management,
+product roadmap input, design critique, mentorship, Agile delivery
+
+Tools: Figma, FigJam, ProtoPie, Framer, Webflow, Miro, Notion, GitHub,
+Lottie, Jitter, Midjourney, Claude Code
+
+Front-end: React, Next.js, TypeScript, JavaScript, Tailwind CSS, HTML,
+CSS
+
+PROFESSIONAL EXPERIENCE
+
+Product Designer, Vela and VelaPro
+
+Singapore (Remote) | October 2023 - Present
+
+-   Lead end-to-end product design for VelaPro, a B2B corporate travel
+    SaaS platform that covers flight booking, hotel booking, expense
+    management, and reporting insights.
+
+-   Designed and shipped core features, including flight and hotel
+    booking flows, AI-assisted features, expense management,
+    reimbursement, and insight dashboards.
+
+-   Partner with product managers, engineers, and the CTO to align
+    design decisions with business goals, technical constraints, and
+    delivery timelines.
+
+-   Maintain the design system in Figma and in the codebase, which keeps
+    the product consistent and speeds up iteration across teams.
+
+-   [Add one metric here: for example, increased booking completion by
+    X%, or cut the corporate booking flow from X steps to Y.]
+
+Product Designer, Meridian Logistics
+
+Jakarta, Indonesia | May 2022 - August 2023
+
+-   Designed and shipped the Transporter Monitoring System (TMS) for
+    last-mile logistics, from order management to fleet management and
+    live monitoring.
+
+-   Increased operator productivity by approximately 1.5x through the
+    redesigned monitoring and order management workflows.
+
+-   Ran design research and delivered insights that shaped the product
+    roadmap.
+
+-   Facilitated ideation workshops and co-design sessions across
+    product, engineering, and operations to align stakeholders.
+
+-   Improved and maintained the multi-platform design system.
+
+Product Designer, Lumen (formerly Kite)
+
+Jakarta, Indonesia | May 2021 - May 2022
+
+-   Designed and shipped the Lumen Business experience, which covers the
+    homepage, high-yield savings account features, and the account
+    verification flow.
+
+-   Collaborated with product managers, researchers, designers, and
+    engineers through every stage of the design process, to confirm
+    desirability, feasibility, and viability.
+
+-   Ran evaluative research, from concept testing to usability studies,
+    to collect user feedback and inform design decisions.
+
+-   [Add one metric here: for example, reduced verification drop-off by
+    X%.]
+
+Product Designer, Vertex
+
+Jakarta, Indonesia | [START MONTH YEAR] - May 2021
+
+-   Led the end-to-end design process, from discovery research and
+    ideation workshops to implementation, for the clientsite.com
+    marketplace redesign and internal tools.
+
+-   Built the first version of the company design system.
+
+Product Designer, Independent (freelance, concurrent with the roles
+above)
+
+Remote | May 2019 - May 2025
+
+-   Delivered product design for 80+ projects and 8+ startups, for local
+    and international clients across multiple industries.
+
+-   Collaborated with founders, product managers, and developers, and
+    applied design thinking to solve business and user problems.
+
+-   Clients include Northwind, Paycove, Tidewater, Almanac, Orbit AI, and
+    Kestrel.
+
+EDUCATION
+
+Bachelor of Engineering, Civil Engineering
+
+Riverside University, Malang, Indonesia | September 2015 - July 2019
+
+LANGUAGES
+
+English (professional working proficiency), Indonesian (native)
