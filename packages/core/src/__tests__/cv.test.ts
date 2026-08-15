@@ -189,6 +189,12 @@ describe('new parts', () => {
 
     expect(afterReload.filter((id) => saved.includes(id))).toEqual([]);
   });
+
+  it('starts a rows section with one row and an entries section with one entry', () => {
+    expect(emptySection('rows').rows).toHaveLength(1);
+    expect(emptySection('entries').entries).toHaveLength(1);
+    expect(emptySection('text').body).toBe('');
+  });
 });
 
 describe('repairing a document that already holds a repeated id', () => {
@@ -240,9 +246,29 @@ describe('repairing a document that already holds a repeated id', () => {
     expect(repairIds(clean)).toBe(clean);
   });
 
-  it('starts a rows section with one row and an entries section with one entry', () => {
-    expect(emptySection('rows').rows).toHaveLength(1);
-    expect(emptySection('entries').entries).toHaveLength(1);
-    expect(emptySection('text').body).toBe('');
+  /*
+   * A document read back from the local store is data from outside the program. The
+   * caller reads it inside a `try`, so anything thrown here is caught and the person's
+   * CV is quietly replaced by the example one. It must not throw.
+   */
+  it('survives a stored document with a list missing', () => {
+    const malformed = {
+      name: 'A Name',
+      headline: '',
+      contact: [{ id: 'c-1', label: 'Email', value: 'a@example.com' }],
+      sections: [{ id: 's-1', heading: 'Core skills', kind: 'rows', body: '' }],
+    } as unknown as CvDoc;
+
+    const fixed = repairIds(malformed);
+    expect(fixed.sections[0].rows).toEqual([]);
+    expect(fixed.sections[0].entries).toEqual([]);
+    expect(fixed.contact[0].value).toBe('a@example.com');
+    expect(renderCvText(fixed)).toContain('A Name');
+  });
+
+  it('survives a stored document with no lists at all', () => {
+    const empty = { name: 'A Name', headline: '' } as unknown as CvDoc;
+    expect(() => repairIds(empty)).not.toThrow();
+    expect(repairIds(empty).sections).toEqual([]);
   });
 });

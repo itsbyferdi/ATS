@@ -66,8 +66,10 @@ export interface CvDoc {
  * document keeps the ids it already has, thus the next part added takes an id that the
  * document is already using. Editing either one then edited both.
  *
- * Randomness has no such state to lose. `crypto` gives it, with a fall-back for a browser
- * that withholds `crypto` outside a secure context.
+ * Randomness has no such state to lose. `crypto` gives it. The fall-back is for a runtime
+ * with no `crypto` on the global object, which means Node before 19; `getRandomValues`
+ * itself needs no secure context, thus a page served over plain http still takes the
+ * first branch.
  */
 function randomPart(): string {
   const source = globalThis.crypto;
@@ -106,15 +108,27 @@ export function repairIds(doc: CvDoc): CvDoc {
     return { ...item, id };
   };
 
-  const contact = doc.contact.map(keep);
-  const sections = doc.sections.map((section) => {
+  // A document read back from the local store is data from outside the program, and it
+  // can be any shape. A missing list here would throw, and the caller reads the document
+  // inside a `try`, thus the throw would be caught and the person's CV quietly replaced
+  // by the example one. A missing list is treated as an empty list instead.
+  const list = <T>(value: T[] | undefined): T[] => (Array.isArray(value) ? value : []);
+
+  const contact = list(doc.contact).map(keep);
+  const sections = list(doc.sections).map((section) => {
     const next = keep(section);
-    return { ...next, rows: next.rows.map(keep), entries: next.entries.map(keep) };
+    return { ...next, rows: list(next.rows).map(keep), entries: list(next.entries).map(keep) };
   });
 
-  // A document with no repeated id is returned as it arrived, so a load does not look
-  // like an edit.
-  return changed ? { ...doc, contact, sections } : doc;
+  // A document with no repeated id and no missing list is returned as it arrived, so a
+  // load does not look like an edit.
+  const reshaped =
+    contact.length !== doc.contact?.length ||
+    sections.length !== doc.sections?.length ||
+    sections.some((s, i) => s.rows.length !== doc.sections[i]?.rows?.length ||
+      s.entries.length !== doc.sections[i]?.entries?.length);
+
+  return changed || reshaped ? { ...doc, contact, sections } : doc;
 }
 
 export const emptyEntry = (): CvEntry => ({
