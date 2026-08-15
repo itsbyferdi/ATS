@@ -14,7 +14,7 @@ import { exportDocx, exportMarkdown, exportPdf, exportText } from '../lib/export
 interface Props {
   text: string;
   jobDescription: string;
-  /** The score of the file as it stands, so the change is shown rather than claimed. */
+  /** The score of the current file. Thus the interface shows the change. */
   currentScore: number;
 }
 
@@ -35,7 +35,7 @@ export function Rebuild({ text, jobDescription, currentScore }: Props) {
     try {
       await fn();
     } catch (err) {
-      alert(`Could not export: ${err instanceof Error ? err.message : String(err)}`);
+      alert(`The program could not make the file. ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setBusy(null);
     }
@@ -44,9 +44,9 @@ export function Rebuild({ text, jobDescription, currentScore }: Props) {
   if (!result.usable) {
     return (
       <section className="card">
-        <h2>There is not enough text to rebuild from</h2>
+        <h2>There is not sufficient text to make a new CV</h2>
         <p className="hint">
-          Almost nothing readable came out of this file, so there is nothing to put back together.
+          This file gave almost no readable text. Thus there is nothing to put together.
         </p>
         <ul className="problem-list">
           {result.problems.map((p) => (
@@ -54,8 +54,8 @@ export function Rebuild({ text, jobDescription, currentScore }: Props) {
           ))}
         </ul>
         <p className="hint" style={{ marginBottom: 0 }}>
-          This is nearly always the file, not your CV. Rebuild the original in Word or Google Docs, or paste your
-          text into the first step and try again.
+          Almost always the file has the fault, not your CV. Make the original file again in Word or Google
+          Docs. As an alternative, put your text in the first step and try again.
         </p>
       </section>
     );
@@ -65,14 +65,12 @@ export function Rebuild({ text, jobDescription, currentScore }: Props) {
 
   return (
     <>
-      {/* Base UI's RadioGroup: arrow keys move between templates and only the selected
-          one sits in the tab order, which is what a radio group is supposed to do. */}
-      {/* A partial rebuild is still worth having, as long as it says so plainly. The
-          previous version refused outright and left the user with nothing. */}
+      {/* A result that is not complete is still useful, if the tool says so clearly. The
+          old version refused the file and gave the user nothing. */}
       {result.quality === 'partial' && (
         <div className="notice">
           <p className="notice-head">
-            <span aria-hidden>!</span> Read this one over before you send it
+            <span aria-hidden>!</span> Read this CV again before you send it
           </p>
           <ul className="problem-list">
             {result.problems.map((p) => (
@@ -80,12 +78,15 @@ export function Rebuild({ text, jobDescription, currentScore }: Props) {
             ))}
           </ul>
           <p className="notice-foot">
-            Every word from your original is still here — anything that could not be placed under a heading is at
-            the end, under “Additional information”. Nothing was thrown away.
+            Each word from your file is here. The text that the tool could not put below a heading is at the
+            end, below “Additional information”. The tool discarded nothing.
           </p>
         </div>
       )}
 
+      {/* The RadioGroup of Base UI: the arrow keys move between the templates, and only
+          the selected template is in the tab order. A radio group must operate in this
+          way. */}
       <RadioGroup
         className="template-picker"
         aria-label="Template"
@@ -110,10 +111,10 @@ export function Rebuild({ text, jobDescription, currentScore }: Props) {
         </div>
         <p className="hint" style={{ margin: 0 }}>
           {delta > 0
-            ? `Rebuilding as ${template.name} gains ${delta} point${delta === 1 ? '' : 's'}, mostly by using headings and dates a parser recognises.`
+            ? `The ${template.name} template adds ${delta} point${delta === 1 ? '' : 's'}. It uses headings and dates that a program can read.`
             : delta === 0
-              ? `Your CV already scores as well as the rebuild. ${template.name} changes the order and the wrapper, not the score.`
-              : `${template.name} scores ${-delta} lower here. Pick another template, or keep your current file.`}
+              ? `Your CV has the same score as the new version. The ${template.name} template changes the order and the format, not the score.`
+              : `The ${template.name} template gives ${-delta} points less. Select a different template or keep your current file.`}
         </p>
       </div>
 
@@ -132,15 +133,15 @@ export function Rebuild({ text, jobDescription, currentScore }: Props) {
         </button>
       </div>
       <p className="legend" style={{ marginTop: 4 }}>
-        Send the DOCX to application forms — it is the format that survives parsing best. The PDF is printed by
-        your browser, so it carries a real text layer. Markdown is for editing, not for sending.
+        Send the DOCX file to application forms. Programs read this format most reliably. Your browser prints
+        the PDF file, thus it contains real text. Use Markdown to edit your CV, not to send it.
       </p>
 
       <section className="group">
         <h3>Preview</h3>
         <p className="legend" style={{ marginTop: 0 }}>
-          This is the whole document. {result.wordsLost > 0 && `${result.wordsLost} words of formatting and separators were dropped; `}
-          nothing that could not be placed was thrown away — it goes under “Additional information”.
+          This is the full document. {result.wordsLost > 0 && `The tool removed ${result.wordsLost} words of formatting and separators. `}
+          The tool discarded no content. Text with no section goes below “Additional information”.
         </p>
         <div className="cv-preview" dangerouslySetInnerHTML={{ __html: html }} />
       </section>

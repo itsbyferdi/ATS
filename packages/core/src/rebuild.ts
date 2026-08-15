@@ -1,12 +1,12 @@
 /**
- * Turns the flat text of a CV back into structure, then writes it out in a shape a
- * parser can read: one column, standard headings, dates in a readable form, contact
- * details as plain text.
+ * Changes the text of a CV back into a structure. Then writes the CV in a form that a
+ * program can read: one column, usual headings, dates in a readable form and contact
+ * data as usual text.
  *
- * The parsing here is heuristic and says so. The one rule it never breaks is that
- * nothing is thrown away — any block it cannot place lands in `unparsed` and is
- * written out under "Additional information". A CV tool that silently drops a job is
- * worse than one that guesses the heading wrong.
+ * This process uses rules of thumb, and it says so. It obeys one rule at all times: it
+ * discards nothing. Each block that it cannot put in a section goes into `unparsed`, and
+ * the program writes that block below "Additional information". A CV tool that removes a
+ * job without a message is worse than a tool that selects the incorrect heading.
  */
 import { extractFields } from './fields.js';
 import { SECTION_PATTERNS } from './lexicon.js';
@@ -18,9 +18,9 @@ const BULLET_RE = /^\s*([•·▪●○◦*‣⁃−–—-]|\d+[.)])\s+/;
 export type SectionKind = 'summary' | 'skills' | 'experience' | 'education' | 'other';
 
 export interface CvEntry {
-  /** "Product Designer" — the part recruiters search on. */
+  /** "Product Designer". This is the part that recruiters search for. */
   role: string;
-  /** "Acme Corporation", when a comma separated it from the role. */
+  /** "Acme Corporation", if a comma divides it from the job title. */
   org: string | null;
   location: string | null;
   dates: string | null;
@@ -39,20 +39,20 @@ export interface CvDocument {
   headline: string | null;
   contact: string[];
   /**
-   * Anything in the header that is not an email, phone, location or link — "Open to
-   * relocation to Singapore", a work-authorisation note. Rebuilding the contact line
-   * from the extracted fields alone would drop these on the floor.
+   * Text in the header that is not an email address, a telephone number, a location or a
+   * link. Examples: "Open to relocation to Singapore" and a note about permission to
+   * work. A contact line that uses only the extracted fields discards this text.
    */
   contactExtra: string[];
   sections: CvSection[];
-  /** Blocks that could not be placed. Written out, never dropped. */
+  /** Blocks that the program could not put in a section. It writes them, always. */
   unparsed: string[];
   fields: ExtractedFields;
-  /** True when job history came from the date-anchored fallback, not from headings. */
+  /** True if the job history comes from the dates, not from the headings. */
   salvaged: boolean;
 }
 
-/** Headings a parser looks for, and the ones we write back. */
+/** The headings that a program looks for. The rebuilder writes these headings. */
 const CANONICAL: Record<SectionKind, string> = {
   summary: 'PROFESSIONAL SUMMARY',
   skills: 'SKILLS',
@@ -80,9 +80,9 @@ function classify(heading: string): SectionKind {
 }
 
 /**
- * Group the text into blocks. A CV exported with blank lines between paragraphs gives
- * them up directly; one extracted from a PDF arrives as a wall of single lines, so
- * wrapped lines are stitched back onto the block above.
+ * Puts the text into blocks. A CV with empty lines between the paragraphs gives the
+ * blocks directly. A CV from a PDF gives many single lines, thus the function joins each
+ * continuation line to the block above it.
  */
 function toBlocks(text: string): string[] {
   const paragraphs = text.split(/\n[ \t]*\n/).filter((p) => p.trim());
@@ -100,8 +100,8 @@ function toBlocks(text: string): string[] {
     const prev = out[out.length - 1];
     const wraps =
       prev &&
-      // A block this long has stopped being one paragraph. Merging further is how a
-      // whole CV ends up as a single unreadable blob.
+      // A block of this length is no longer one paragraph. More joins make the full CV
+      // into one block that nobody can read.
       prev.length < 400 &&
       !BULLET_RE.test(line) &&
       !isHeading(line) &&
@@ -114,7 +114,7 @@ function toBlocks(text: string): string[] {
 
 const stripBullet = (s: string) => s.replace(BULLET_RE, '').trim();
 
-/** "Singapore (Remote) | October 2023 - Present" → the two halves. */
+/** Divides "Singapore (Remote) | October 2023 - Present" into two parts. */
 function splitMeta(block: string): { location: string | null; dates: string | null } {
   const range = findDateRanges(block)[0];
   if (range) {
@@ -128,8 +128,8 @@ function splitMeta(block: string): { location: string | null; dates: string | nu
     return { location, dates };
   }
 
-  // No range we can parse — a placeholder start date, or a format the matcher does not
-  // know. Fall back to the separator and keep the text verbatim rather than lose it.
+  // The function cannot read the range. The start date is a placeholder, or the format
+  // is unknown. Use the separator and keep the text without changes.
   const parts = block.split(/\s*[|·•]\s*/).map((s) => s.trim()).filter(Boolean);
   if (parts.length >= 2) {
     const last = parts[parts.length - 1];
@@ -141,16 +141,16 @@ function splitMeta(block: string): { location: string | null; dates: string | nu
 }
 
 /**
- * A line under a role that carries the place and the dates. Worth telling apart from a
- * role line, because when the dates fail to parse — a placeholder, an odd format — the
- * block would otherwise be read as a whole new job.
+ * A line below a job title that has the location and the dates. The function must know
+ * the difference between this line and a job title. If the dates do not parse, because
+ * of a placeholder or an unusual format, the function reads the block as a new job.
  */
 function looksLikeMeta(block: string): boolean {
   if (block.split(/\s+/).length > 14) return false;
   return /[|·•]/.test(block) || /\b(19|20)\d{2}\b/.test(block) || /present|current/i.test(block);
 }
 
-/** "Product Designer, Acme Corporation" → role and organisation. */
+/** Divides "Product Designer, Acme Corporation" into the job title and the company. */
 function splitRole(block: string): { role: string; org: string | null } {
   const clean = block.replace(/\s*[|·•]\s*.*$/, '').trim();
   const comma = clean.indexOf(',');
@@ -172,8 +172,8 @@ function parseEntries(blocks: string[]): { entries: CvEntry[]; loose: string[] }
       continue;
     }
 
-    // The line straight after a role line, before any bullets, is that role's place
-    // and dates — even when the dates themselves are a placeholder.
+    // The line immediately after a job title, before the items, has the location and
+    // the dates of that job. This is true also if the dates are a placeholder.
     if (current && !current.dates && !current.bullets.length && looksLikeMeta(block)) {
       const { location, dates } = splitMeta(block);
       if (dates || location) {
@@ -193,22 +193,22 @@ function parseEntries(blocks: string[]): { entries: CvEntry[]; loose: string[] }
 }
 
 /**
- * Last resort when no headings survived extraction.
+ * The last method, for a file with no headings.
  *
- * Headings are the first thing a mangled layout destroys — a sidebar stitched through
- * the middle leaves "E   ducation" where "EDUCATION" used to be. Date ranges survive
- * that far better, and a date range is almost always the start of a job. So the text is
- * cut at each date and each slice becomes an entry.
+ * A damaged layout destroys the headings first. A side column through the middle of the
+ * page changes "EDUCATION" into "E   ducation". Dates stay correct much more frequently,
+ * and a date range is almost always the start of a job. Thus the function divides the
+ * text at each date, and each part becomes one job.
  *
- * Deliberately fussy: if the pieces it produces do not look like roles, it returns
- * nothing and lets the caller fall back to reporting honestly. Inventing structure would
- * be worse than admitting there is none.
+ * The function is strict. If the parts do not look like jobs, it returns nothing and the
+ * caller gives an accurate report. A structure that the function invents is worse than a
+ * statement that there is no structure.
  */
 function salvageByDates(text: string): CvEntry[] {
   const ranges = findDateRanges(text);
   if (ranges.length < 2) return [];
 
-  // A short fragment ending in a comma, with no job word in it, is a place not a job.
+  // A short part that ends with a comma and has no job word is a location, not a job.
   const looksLikePlace = (s: string) =>
     s.length <= 40 &&
     /[,(]/.test(s) &&
@@ -219,9 +219,10 @@ function salvageByDates(text: string): CvEntry[] {
     const r = ranges[i];
 
     /*
-     * The date is usually preceded either by the role on the same line, or by the place
-     * on the same line with the role on the line above. Taking the same line blindly
-     * produced entries called "Jakarta," — a location where the job title should be.
+     * Before the date there is usually the job title on the same line. As an alternative,
+     * there is the location on the same line and the job title on the line above. Use of
+     * the same line at all times gave jobs with the name "Jakarta,", which is a location
+     * in the position of a job title.
      */
     const priorLines = text
       .slice(Math.max(0, r.index - 320), r.index)
@@ -250,12 +251,14 @@ function salvageByDates(text: string): CvEntry[] {
   }
 
   /*
-   * Two clean-ups, both aimed at the same thing: a mangled two-column file interleaves
-   * the sidebar, so the cut can land on a stray word and invent a job called "Tools".
+   * Two corrections for the same problem. A damaged file with two columns mixes the side
+   * column into the text. Thus a division can occur at an incorrect word and make a job
+   * with the name "Tools".
    *
-   * Entries sharing a date range are the same job seen twice — keep the one whose role
-   * line actually reads like a role. A role line that is a whole paragraph means the cut
-   * landed badly, and a bare single word with nothing under it is sidebar debris.
+   * Two jobs with the same date range are one job that the function found two times.
+   * Keep the job with the better job title. A job title that is a full paragraph shows
+   * an incorrect division. A single word with no items below it is text from the side
+   * column.
    */
   const roleish = (e: CvEntry) =>
     (e.org ? 2 : 0) + Math.min(e.role.split(/\s+/).length, 6) + (e.bullets.length ? 1 : 0);
@@ -285,8 +288,8 @@ export function parseCv(text: string): CvDocument {
   const fields = extractFields(text);
   const blocks = toBlocks(text);
 
-  // With no heading anywhere, the header must stay small. Slicing off a fixed chunk is
-  // how a CV that failed to parse loses its entire body without anyone noticing.
+  // If the file has no headings, the header must stay small. A header of a fixed size
+  // removes the full body of a CV that did not parse, and nobody sees the problem.
   const firstHeading = blocks.findIndex(isHeading);
   const headerEnd = firstHeading === -1 ? Math.min(3, blocks.length) : firstHeading;
   const header = blocks.slice(0, headerEnd);
@@ -305,14 +308,14 @@ export function parseCv(text: string): CvDocument {
   const unparsed: string[] = [];
 
   /*
-   * Keep header text the rebuilt contact line will not carry — but only the short,
-   * contact-shaped pieces.
+   * Keep the header text that the new contact line does not contain. Keep only the short
+   * parts that look like contact data.
    *
-   * Two ways this used to lose whole paragraphs. A block was dropped outright if it
-   * merely *contained* a known value anywhere inside it, so on a badly-extracted file a
-   * block holding half the CV vanished because the city name appeared in it. And long
-   * header blocks were never written anywhere at all. Anything that is not plainly a
-   * contact detail now falls through to `unparsed`, which is always rendered.
+   * This code lost full paragraphs in two ways. It discarded a block if the block
+   * contained a known value at any position. Thus a block with one half of the CV
+   * disappeared because it contained the name of the city. It also wrote no long header
+   * blocks. Now each part that is not clearly contact data goes to `unparsed`, and the
+   * program always writes `unparsed`.
    */
   const known = [fields.email, fields.phone, fields.location, fields.linkedin, fields.portfolio]
     .filter(Boolean)
@@ -324,7 +327,8 @@ export function parseCv(text: string): CvDocument {
       const segment = raw.trim();
       if (segment.length < 4) continue;
 
-      // Too long to be a contact detail: it is content, and content is never discarded.
+      // This part is too long for contact data. It is content, and the program keeps
+      // all content.
       if (segment.length > 70 || segment.split(/\s+/).length > 12) {
         unparsed.push(segment);
         continue;
@@ -332,7 +336,8 @@ export function parseCv(text: string): CvDocument {
       const f = flatten(segment);
       if (!f) continue;
       if (/^(portfolio|linkedin|email|phone|mobile|website|web)\b:?$/i.test(segment)) continue;
-      // Only skip a segment that *is* a known value, not one that merely mentions it.
+      // Remove a part only if the part is a known value. Do not remove a part that
+      // contains a known value.
       if (known.some((k) => k === f)) continue;
       contactExtra.push(segment);
     }
@@ -370,9 +375,9 @@ export function parseCv(text: string): CvDocument {
   closeSection();
 
   /*
-   * No headings anywhere, so everything landed in `unparsed`. Before giving up on
-   * structure, try anchoring on the dates instead. Whatever the salvage does not claim
-   * still gets written out, so this can add structure but never remove content.
+   * The file has no headings, thus all the text went to `unparsed`. Before the program
+   * stops, it tries to use the dates. The program writes all the text that this method
+   * does not use. Thus the method can add structure, but it cannot remove content.
    */
   let salvaged = false;
   let remaining = unparsed;
@@ -387,8 +392,8 @@ export function parseCv(text: string): CvDocument {
       });
       salvaged = true;
 
-      // The salvage read the whole document, so anything it claimed is still sitting in
-      // `unparsed` as well. Writing both out gave a CV with every bullet twice.
+      // This method read the full document, thus the text that it used is also in
+      // `unparsed`. Two copies of the text gave a CV with each item two times.
       const claimed = flatten(
         entries.flatMap((e) => [e.role, e.org ?? '', e.location ?? '', ...e.bullets]).join(' '),
       );
@@ -405,9 +410,9 @@ export function parseCv(text: string): CvDocument {
 }
 
 /* ── templates ───────────────────────────────────────────────────────────────
- * All three are single-column and use the same standard headings, because that is
- * what makes a file readable. What differs is order and density — which is the part
- * that actually changes who reads what first.
+ * All three templates use one column and the same usual headings, because these two
+ * things make a file readable. The templates are different in their order and their
+ * density. These two things change what a person reads first.
  */
 export type TemplateId = 'classic' | 'compact' | 'skills-first';
 
@@ -418,7 +423,7 @@ export interface Template {
   order: SectionKind[];
   headline: boolean;
   summary: boolean;
-  /** Collapse the skills block onto one line to save space. */
+  /** Puts the skills on one line to save space. */
   inlineSkills: boolean;
 }
 
@@ -426,7 +431,7 @@ export const TEMPLATES: Template[] = [
   {
     id: 'classic',
     name: 'Classic',
-    blurb: 'Summary, experience, education, skills. The order most recruiters expect, and the safest default.',
+    blurb: 'Summary, experience, education and skills. Most recruiters expect this order. It is the safest choice.',
     order: ['summary', 'experience', 'education', 'skills', 'other'],
     headline: true,
     summary: true,
@@ -435,7 +440,7 @@ export const TEMPLATES: Template[] = [
   {
     id: 'compact',
     name: 'Compact',
-    blurb: 'No summary and skills on one line, so more of your actual work fits on the first page. Good when you have many roles.',
+    blurb: 'No summary, and the skills go on one line. Thus more of your work goes on the first page. Use this if you have many jobs.',
     order: ['experience', 'skills', 'education', 'other'],
     headline: true,
     summary: false,
@@ -444,7 +449,7 @@ export const TEMPLATES: Template[] = [
   {
     id: 'skills-first',
     name: 'Skills first',
-    blurb: 'Skills sit above your job history. Good for changing field, or when the posting leans hard on specific tools.',
+    blurb: 'The skills go above your job history. Use this if you change field, or if the advert asks for specific tools.',
     order: ['summary', 'skills', 'experience', 'education', 'other'],
     headline: true,
     summary: true,
@@ -455,7 +460,7 @@ export const TEMPLATES: Template[] = [
 export const templateById = (id: TemplateId): Template =>
   TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
 
-/** The contact line, rebuilt from the fields that were actually found. */
+/** The new contact line. It contains the fields that the program found. */
 export function contactLine(doc: CvDocument): string {
   const f = doc.fields;
   return [f.email, f.phone, f.location, f.linkedin, f.portfolio].filter(Boolean).join(' | ');
@@ -478,8 +483,9 @@ const entryLine = (e: CvEntry) => [e.role, e.org].filter(Boolean).join(', ');
 const metaLine = (e: CvEntry) => [e.location, e.dates].filter(Boolean).join(' | ');
 
 /**
- * The canonical view: what any ATS receives once the container is stripped away. This
- * is the text that gets scored, so the score reflects the file rather than the wrapper.
+ * The primary form of the CV. A hiring program gets this text after it opens the file.
+ * The program gives a score to this text, thus the score applies to the content and not
+ * to the file format.
  */
 export function renderText(doc: CvDocument, t: Template): string {
   const out: string[] = [];
@@ -516,7 +522,7 @@ export function renderText(doc: CvDocument, t: Template): string {
   return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
 }
 
-/** For editing and version control. Send the DOCX or the PDF, not this. */
+/** Use this format to edit the CV. Send the DOCX or the PDF file, not this file. */
 export function renderMarkdown(doc: CvDocument, t: Template): string {
   const out: string[] = [];
   if (doc.name) out.push(`# ${doc.name}`, '');
@@ -553,32 +559,32 @@ export function renderMarkdown(doc: CvDocument, t: Template): string {
 /* ── the safety check ────────────────────────────────────────────────────────*/
 
 /**
- * `clean`   — structure found, everything placed. Use it.
- * `partial` — some of it could not be organised, but nothing was thrown away. Worth
- *             offering with a warning; a flat refusal helped nobody.
- * `unusable`— there was not enough text to work with at all.
+ * `clean`: the program found the structure and put all the text in a section. Use it.
+ * `partial`: the program could not organise some text, but it discarded nothing. Show
+ * this result with a warning. A refusal gives the user nothing.
+ * `unusable`: the file has too little text to use.
  */
 export type RebuildQuality = 'clean' | 'partial' | 'unusable';
 
 export interface Rebuild {
   doc: CvDocument;
-  /** The rebuilt CV as plain text — what an ATS receives once the file is opened. */
+  /** The new CV as usual text. A hiring program gets this after it opens the file. */
   text: string;
-  /** Words in the original that did not survive the rebuild. */
+  /** The quantity of words in the source file that are not in the new file. */
   wordsLost: number;
   quality: RebuildQuality;
-  /** True for `clean` and `partial`. Only `unusable` is withheld. */
+  /** True for `clean` and `partial`. The program shows all but `unusable`. */
   usable: boolean;
-  /** What went wrong, in plain words. Empty when clean. */
+  /** The problems, in simple words. This list is empty for a clean result. */
   problems: string[];
 }
 
 const wordsIn = (s: string) => flatten(s).split(' ').filter(Boolean).length;
 
 /**
- * Everything the parse held on to, regardless of which template is selected. Measuring
- * against a rendered template would count Compact dropping the summary — a deliberate
- * choice — as data loss, and refuse a perfectly good rebuild.
+ * All the text that the parser kept, for any template. A measurement against one
+ * template counts the summary that Compact removes as lost data. Compact removes the
+ * summary on purpose. Thus that measurement refuses a correct result.
  */
 function retainedWords(doc: CvDocument): number {
   const parts: (string | null)[] = [doc.name, doc.headline, contactLine(doc), ...doc.contactExtra];
@@ -591,13 +597,13 @@ function retainedWords(doc: CvDocument): number {
 }
 
 /**
- * Rebuilds, then checks its own work by counting words in and words out.
+ * Makes the CV again, then examines the result. It counts the words before and after.
  *
- * The parser is heuristic, and on a CV whose text layer is already broken it can fail
- * badly — headings unrecognisable, bullets with no markers, a sidebar stitched through
- * the middle. Handing someone a "cleaned up" CV that quietly lost three jobs would do
- * real damage, so a rebuild that drops more than a tenth of the words is refused rather
- * than shown. On those files the honest advice is to fix the source first.
+ * The parser uses rules of thumb. If the text layer of a CV is already damaged, the
+ * parser can fail: it cannot identify the headings, the items have no markers and a side
+ * column goes through the middle. A "corrected" CV that lost three jobs does real damage
+ * to the user. Thus the program does not show a result that lost more than one tenth of
+ * the words. For these files, the correct advice is to correct the source file first.
  */
 export function rebuildCv(source: string, t: Template): Rebuild {
   const doc = parseCv(source);
@@ -627,10 +633,10 @@ export function rebuildCv(source: string, t: Template): Rebuild {
   }
 
   /*
-   * Only a file with almost no recoverable text is withheld now. The old rule refused
-   * anything that lost a tenth of its words, which meant a damaged-but-complete CV was
-   * held back even though every word of it had been preserved — the user was told to go
-   * away and fix the file, with nothing to show for it.
+   * The program refuses only a file with almost no readable text. The old rule refused
+   * each file that lost one tenth of its words. Thus the program refused a damaged but
+   * complete CV although it kept each word. The user got only instructions to correct
+   * the file, and no result.
    */
   const quality: RebuildQuality =
     before < 40 || retainedWords(doc) < 40
@@ -650,7 +656,7 @@ export function rebuildCv(source: string, t: Template): Rebuild {
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/** Drives the on-screen preview and the print-to-PDF path. */
+/** The program uses this format for the preview on the screen and for the PDF. */
 export function renderHtml(doc: CvDocument, t: Template): string {
   const out: string[] = [];
   if (doc.name) out.push(`<h1>${esc(doc.name)}</h1>`);

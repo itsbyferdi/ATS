@@ -72,9 +72,9 @@ export function JobPanel({ value, onChange }: JobPanelProps) {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * A browser cannot fetch another site directly — job boards do not allow it — so this
-   * goes through the optional API. When that is not running, say so plainly rather than
-   * leaving a spinner going.
+   * A browser cannot get data from a different site, because job boards do not permit
+   * it. Thus this function uses the optional API. If the API does not operate, give a
+   * clear message. Do not leave a spinner on the screen.
    */
   const importUrl = async () => {
     if (!url.trim()) return;
@@ -135,8 +135,8 @@ export function JobPanel({ value, onChange }: JobPanelProps) {
       </div>
       {error && <p className="url-error">{error}</p>}
       <p className="legend" style={{ marginTop: 6, marginBottom: 12 }}>
-        Works with most job boards. Some sites make you sign in before they show the advert — if this cannot read
-        yours, copy the text and paste it below.
+        This operates with most job boards. Some sites show the advert only after you sign in. If the tool
+        cannot read your advert, copy the text and put it below.
       </p>
 
       <label className="visually-hidden" htmlFor="jd-text">Job description</label>

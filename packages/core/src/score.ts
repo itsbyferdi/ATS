@@ -22,27 +22,27 @@ export function bandFor(score: number): Band {
 }
 
 const REBUILD_FIX =
-  'Do not export the PDF from Figma, Sketch, Canva, or a browser print dialogue. Rebuild the CV in Google Docs or Word and export from there, or just send the DOCX. Then check it: open the file, press Ctrl+A and Ctrl+C, and paste into a notepad. If what lands is not clean readable text, no ATS can read it either.';
+  'Do not export the PDF from Figma, Sketch, Canva or a browser print window. Make the CV again in Google Docs or Word and export it from there. As an alternative, send the DOCX file. Then do this test: open the file, press Ctrl+A and Ctrl+C, and paste the result into a notepad. If the result is not clear readable text, no hiring program can read it.';
 
-/** Drew a lot of ink and gave back almost no characters. */
+/** The reader made many marks on the page but got almost no characters. */
 const isBlind = (d: ExtractionDiagnostics) => d.characters < 120 && d.drawingOps > 100;
 
-/** Recovered enough text to be worth scoring. */
+/** The reader got sufficient text to give a score. */
 const isReadable = (d: ExtractionDiagnostics) => d.characters >= 120;
 
 function type3Note(engines: ExtractionDiagnostics[]): string {
   const n = engines.reduce((most, e) => Math.max(most, e.type3Fonts ?? 0), 0);
   return n
-    ? ` The file uses ${n} Type 3 font${n === 1 ? '' : 's'}. ISO 32000 lets that kind of font store each letter as a small drawing instead of a character, and nothing makes it record which letter the drawing is meant to be. That is why the page looks fine and reads as nothing.`
+    ? ` The file uses ${n} Type 3 font${n === 1 ? '' : 's'}. ISO 32000 permits this type of font to keep each letter as a small drawing in place of a character. The font does not have to record the applicable letter. Thus the page looks correct but gives no text.`
     : '';
 }
 
 /**
- * Catches a file before any rubric applies.
+ * Finds a file that no set of checks can apply to.
  *
- * Takes every engine, not just the winning one. The API hands back whichever engine
- * recovered the most characters, so when one engine reads 2890 garbled characters and
- * another reads zero, looking only at the winner hides the entire finding.
+ * This function uses all the readers, not only the best one. The API sends back the
+ * reader that got the most characters. If one reader gets 2890 damaged characters and a
+ * second reader gets zero, an examination of only the best reader hides the problem.
  */
 export function detectHardFailure(
   primary: ExtractionDiagnostics | undefined,
@@ -57,15 +57,16 @@ export function detectHardFailure(
   const readable = engines.filter(isReadable);
   const worst = blind[0];
 
-  // One engine read it, another read nothing. You do not get to pick which parser the
-  // employer runs, so this file is not safe to send even though it "works" somewhere.
+  // One reader got text and one reader got nothing. You cannot select the program that
+  // the employer uses. Thus this file is not safe to send, although it operates
+  // correctly with some programs.
   if (readable.length) {
     return {
       kind: 'engine-split',
       diagnostics: worst,
       engines,
-      headline: 'One reader sees text, another sees a blank page',
-      explanation: `${readable[0].engine} pulled ${readable[0].characters} characters out of this file. ${worst.engine} drew ${worst.drawingOps} shapes and got ${worst.characters}.${type3Note(engines)} Both are used by real hiring systems. Send this file and roughly half of them receive an empty CV.`,
+      headline: 'One reader gets text, a second reader gets an empty page',
+      explanation: `The ${readable[0].engine} got ${readable[0].characters} characters from this file. The ${worst.engine} made ${worst.drawingOps} marks on the page and got ${worst.characters} characters.${type3Note(engines)} Hiring systems use both types of reader. If you send this file, approximately one half of them get an empty CV.`,
       fix: REBUILD_FIX,
     };
   }
@@ -74,8 +75,8 @@ export function detectHardFailure(
     kind: 'no-text-layer',
     diagnostics: worst,
     engines,
-    headline: 'No text at all',
-    explanation: `This file drew ${worst.drawingOps} shapes on the page and gave back ${worst.textRuns} pieces of readable text. The letters are there to look at, but there are no characters underneath them for software to pick up.${type3Note(engines)}`,
+    headline: 'The file contains no text',
+    explanation: `This file made ${worst.drawingOps} marks on the page and gave ${worst.textRuns} pieces of readable text. You can see the letters, but there are no characters below them. Software cannot get the letters.${type3Note(engines)}`,
     fix: REBUILD_FIX,
   };
 }
@@ -125,7 +126,7 @@ export function scoreResume(input: ScoreInput): ScoreReport {
   });
 
   const points = categories.reduce((s, c) => s + c.score, 0);
-  // Job Match drops out when no posting is supplied, so the total rescales from 75.
+  // If there is no advert, Job Match does not apply and the total comes from 75 points.
   const max = categories.reduce((s, c) => s + c.max, 0);
   const score = max ? Math.round((points / max) * 100) : 0;
 

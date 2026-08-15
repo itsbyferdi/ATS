@@ -73,8 +73,8 @@ describe('rebuildCv', () => {
 
   /**
    * The important one. On a CV whose text layer is broken the parser cannot find
-   * headings, and it used to refuse outright — which left the user with a lecture and
-   * nothing else, having lost 371 of their 457 words along the way.
+   * headings. The old code refused the file. Thus the user got only instructions, and
+   * the process lost 371 of the 457 words.
    *
    * It now anchors on the dates instead, warns clearly, and keeps every word.
    */
@@ -94,7 +94,7 @@ describe('rebuildCv', () => {
       expect(exp.entries.every((e) => e.dates)).toBe(true);
     });
 
-    it('keeps the content — the old version lost most of it', () => {
+    it('keeps the content, because the old version lost most of it', () => {
       const words = (t: string) => t.split(/\s+/).filter(Boolean).length;
       expect(r.wordsLost).toBeLessThan(80);
       expect(words(r.text)).toBeGreaterThan(words(legacy) * 0.9);

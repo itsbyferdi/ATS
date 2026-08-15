@@ -8,9 +8,9 @@ export const STAGES: { id: StageId; label: string }[] = [
 ];
 
 /**
- * A spinner says "wait". This says what it is doing, which is more honest and happens
- * to teach the point of the tool: the file is read twice, by two different engines, and
- * the disagreement between them is the finding.
+ * A spinner tells the user to wait. This component gives the current operation. It is
+ * more accurate, and it shows the purpose of the tool: two different readers read the
+ * file, and a difference between them is the result.
  */
 export function Parsing({ filename, stage }: { filename: string; stage: StageId }) {
   const current = STAGES.findIndex((s) => s.id === stage);
@@ -30,7 +30,7 @@ export function Parsing({ filename, stage }: { filename: string; stage: StageId 
               </span>
               <span>
                 {s.label}
-                {state === 'active' && <span className="visually-hidden"> — in progress</span>}
+                {state === 'active' && <span className="visually-hidden">, in progress</span>}
               </span>
             </li>
           );

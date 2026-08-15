@@ -6,10 +6,11 @@ import { isIP } from 'node:net';
  *
  * This is the one place the server reaches out to the internet on a user's say-so, which
  * makes it the obvious hole in an otherwise offline tool. Server-side fetchers get used
- * to reach things the caller cannot — cloud metadata endpoints, admin panels on the
- * loopback interface, boxes on the same LAN. Every guard below exists for that reason:
- * only http and https, every hop re-checked after DNS resolution, private and reserved
- * address ranges refused, a hard timeout, and a cap on how much is read.
+ * to get data that the caller cannot get: cloud metadata addresses, admin pages on the
+ * loopback interface and machines on the same network. Each guard below has this
+ * purpose. The function permits only http and https. It examines each address after DNS
+ * resolution. It refuses private and reserved addresses. It has a timeout and a limit on
+ * the quantity of data.
  */
 
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -189,7 +190,7 @@ export async function fetchJobPosting(rawUrl: string): Promise<JobFetchResult> {
   const text = htmlToText(html);
   if (text.split(/\s+/).length < 60) {
     throw new Error(
-      'That page did not give up enough text to read. It may need you to sign in — copy the advert and paste it instead.',
+      'That page did not give sufficient text. The site can require you to sign in. Copy the advert and put it in the box below.',
     );
   }
   return { text, source: finalUrl, structured: false };

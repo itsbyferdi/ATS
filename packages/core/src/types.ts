@@ -102,16 +102,16 @@ export interface ExtractionDiagnostics {
   drawingOps: number;
   characters: number;
   /**
-   * PDFs only. How many Type 3 fonts the file uses. ISO 32000 lets a Type 3 font
-   * define each letter as a small drawing program, and nothing requires it to say
-   * which character that drawing represents. Design tools export these, and that is
-   * why the letters look fine and read as nothing.
+   * PDF files only. The quantity of Type 3 fonts in the file. ISO 32000 permits a Type 3
+   * font to make each letter with a small drawing program. The font does not have to
+   * give the applicable character. Design tools export these fonts. Thus the letters
+   * look correct but give no text.
    */
   type3Fonts?: number;
   /**
-   * PDFs only. True when the file carries a structure tree. ISO 14289 (PDF/UA) makes
-   * that tree the place a PDF states its reading order. Without one, every parser has
-   * to guess the order from where the glyphs sit on the page.
+   * PDF files only. True if the file has a structure tree. ISO 14289 (PDF/UA) uses this
+   * tree to give the reading order of a PDF. Without a tree, each program calculates the
+   * order from the position of the letters on the page.
    */
   tagged?: boolean;
 }
@@ -125,19 +125,19 @@ export interface EngineResult {
 }
 
 /**
- * Two ways a file can fail before any rubric applies.
+ * A file can fail in two ways before the checks apply.
  *
- * `no-text-layer` — every engine drew the page and got no characters back.
- * `engine-split`  — one engine read the file and another read nothing. You cannot
- *                   choose which parser an employer runs, so a file that is blank to
- *                   one of them is not safe to send.
+ * `no-text-layer`: each reader made marks on the page and got no characters.
+ * `engine-split`: one reader got the text and a second reader got nothing. You cannot
+ * select the program that an employer uses. Thus a file that is empty to one reader is
+ * not safe to send.
  */
 export type HardFailureKind = 'no-text-layer' | 'engine-split';
 
 export interface HardFailure {
   kind: HardFailureKind;
   diagnostics: ExtractionDiagnostics;
-  /** Every engine that ran, so the UI can show who read what. */
+  /** Each reader that operated. The interface shows what each reader got. */
   engines: ExtractionDiagnostics[];
   headline: string;
   explanation: string;
@@ -170,8 +170,8 @@ export interface ScoreInput {
   /** Supply when the text came from a PDF, so a zero-text file can hard-fail. */
   diagnostics?: ExtractionDiagnostics;
   /**
-   * Every engine that read the file, not just the winning one. Without this a second
-   * engine that salvages text hides the fact that the first engine read nothing.
+   * Each reader that read the file, not only the best one. Without this data, a second
+   * reader that gets some text hides the fact that the first reader got nothing.
    */
   engines?: ExtractionDiagnostics[];
 }

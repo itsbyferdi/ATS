@@ -4,9 +4,9 @@ import type { Check } from '../types.js';
 import { makeCheck, type CheckContext } from './context.js';
 
 /**
- * These four checks are for the person reading, not the software. No parser scores
- * your verbs. They are here because a human decides what happens after the search,
- * and this is what that human skims.
+ * These four checks are for the person who reads the CV. They are not for the software.
+ * No program gives a score to your verbs. A person makes the decision after the search,
+ * and these are the parts that the person reads first.
  */
 const CAT = 'Impact Language' as const;
 
@@ -16,7 +16,7 @@ export function impactChecks({ lines, flat }: CheckContext): Check[] {
   const body = lines.body;
   const checks: Check[] = [];
 
-  // D1 — recruiters scan the first two words of each line and little else
+  // D1. Most people read the first two words of a line and no more.
   const verbCount = body.filter((b) => {
     const first = normalise(b).split(/\s+/)[0]?.replace(/[^a-z]/g, '') ?? '';
     return ACTION_VERBS.has(first);
@@ -24,47 +24,47 @@ export function impactChecks({ lines, flat }: CheckContext): Check[] {
   const verbRate = body.length ? verbCount / body.length : 0;
   checks.push(
     makeCheck(
-      CAT, 'D1', 'Bullets open with an action verb', 5,
+      CAT, 'D1', 'Each item starts with a verb', 5,
       verbRate * 5,
-      `${verbCount} of ${body.length} lines start with a strong verb (${Math.round(verbRate * 100)}%).`,
-      'Start each bullet with what you did: Led, Designed, Shipped, Cut, Grew. Most people skim the first two words of a line and nothing else.',
+      `${verbCount} of ${body.length} lines (${Math.round(verbRate * 100)}%) start with a strong verb.`,
+      'Start each item with your action: Led, Designed, Shipped, Cut, Grew. Most people read the first two words of a line and no more.',
     ),
   );
 
-  // D2 — a claim without a number is an opinion
+  // D2. A statement with no number is only an opinion.
   const quantCount = body.filter((b) => QUANT_RE.test(b)).length;
   const quantRate = body.length ? quantCount / body.length : 0;
   checks.push(
     makeCheck(
-      CAT, 'D2', 'Results carry numbers', 5,
+      CAT, 'D2', 'The results have numbers', 5,
       quantRate >= 0.4 ? 5 : quantRate >= 0.25 ? 4 : quantRate >= 0.15 ? 3 : quantRate > 0 ? 1 : 0,
-      `${quantCount} of ${body.length} lines contain a number (${Math.round(quantRate * 100)}%). Around a third reads well to most people.`,
-      'Put a number on at least one bullet per job: take-up, conversion, time saved, drop-off, team size, features shipped. A fair estimate is fine if you can back it up.',
+      `${quantCount} of ${body.length} lines (${Math.round(quantRate * 100)}%) have a number. Approximately one third reads well.`,
+      'Add a number to a minimum of one item for each job. Use take-up, conversion, time saved, drop-off, team size or the quantity of features. A correct estimate is satisfactory if you can support it.',
     ),
   );
 
-  // D3 — long bullets get skipped by humans and dilute keyword density
+  // D3. A long item is difficult to read and decreases the density of the keywords.
   const longBullets = body.filter((b) => b.split(/\s+/).length > 34).length;
   checks.push(
     makeCheck(
-      CAT, 'D3', 'Bullets stay short', 3,
+      CAT, 'D3', 'The items are short', 3,
       longBullets === 0 ? 3 : longBullets <= 2 ? 2 : 0,
-      `${longBullets} line${longBullets === 1 ? '' : 's'} run past 34 words.`,
-      'Split anything longer than two lines. Long bullets get skipped, and they spread your keywords thin.',
+      `${longBullets} line${longBullets === 1 ? '' : 's'} have more than 34 words.`,
+      'Divide each item that is longer than two lines. People do not read long items, and long items decrease the density of your keywords.',
     ),
   );
 
-  // D4 — resume voice is verb-first fragments
+  // D4. The style of a CV is short phrases that start with a verb.
   const weak = WEAK_OPENERS.filter((w) => flat.includes(` ${w} `));
   const firstPerson = /\s(i|my|me)\s/.test(flat);
   checks.push(
     makeCheck(
-      CAT, 'D4', 'No filler openers or first person', 2,
+      CAT, 'D4', 'No filler words and no first person', 2,
       (weak.length ? 0 : 1) + (firstPerson ? 0 : 1),
-      `${weak.length ? `Found: ${weak.join(', ')}.` : 'No filler openers.'} ${
-        firstPerson ? 'First-person pronouns found.' : 'No first-person pronouns.'
+      `${weak.length ? `Found: ${weak.join(', ')}.` : 'No filler words.'} ${
+        firstPerson ? 'Found the words I, my or me.' : 'No first person words.'
       }`,
-      'Cut "responsible for" and "worked on", and drop I, my and me. A CV reads as short phrases that start with a verb.',
+      'Remove "responsible for" and "worked on". Remove the words I, my and me. The style of a CV is short phrases that start with a verb.',
     ),
   );
 

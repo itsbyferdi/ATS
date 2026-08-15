@@ -11,34 +11,34 @@ export function contactChecks({ fields, jobDescription, hasJobDescription }: Che
       CAT, 'B1', 'Email address', 5,
       fields.email ? 5 : 0,
       fields.email ?? 'Not found.',
-      'Write your email as plain text. A clickable icon with no visible address reads as nothing.',
+      'Write your email address as usual text. An icon with no visible address gives no data.',
     ),
     makeCheck(
-      CAT, 'B2', 'Phone number', 3,
+      CAT, 'B2', 'Telephone number', 3,
       fields.phone ? 3 : 0,
       fields.phone ?? 'Not found.',
-      'Add a phone number with the country code. Some application forms will not create your record without one.',
+      'Add a telephone number with the country code. Some application forms do not make your record without one.',
     ),
     makeCheck(
       CAT, 'B3', 'Location', 3,
       fields.location ? 3 : 0,
       fields.location ?? 'Not found.',
-      'Add "City, Country". Recruiters filter by location, and a blank one often gets read as something to worry about.',
+      'Add the city and the country. Recruiters filter by location. An empty location can look like a problem.',
     ),
     makeCheck(
-      CAT, 'B4', 'LinkedIn URL', 2,
+      CAT, 'B4', 'LinkedIn address', 2,
       fields.linkedin ? 2 : 0,
       fields.linkedin ?? 'Not found.',
-      'Write the address out in full: linkedin.com/in/your-handle. Do not hide it behind the word "LinkedIn".',
+      'Write the full address: linkedin.com/in/your-handle. Do not hide it behind the word "LinkedIn".',
     ),
   ];
 
   /*
-   * B5 only counts in fields that actually expect a link to your work — design, code,
-   * marketing, writing. An accountant with no portfolio is not doing anything wrong, and
-   * docking them two points for it made the score quietly worse for most professions.
-   * When the posting says nothing about the field, the check still runs, because then
-   * nobody can tell either way.
+   * B5 applies only to fields that usually ask for a link to your work, for example
+   * design, software, marketing and writing. An accountant with no portfolio does
+   * nothing incorrect. A penalty of two points made the score worse for most jobs. If
+   * the advert does not identify the field, the check stays, because then nobody can
+   * know.
    */
   const expectsPortfolio =
     !hasJobDescription || selectPacks(flatten(jobDescription)).some((p) => p.expectsPortfolio);
@@ -49,7 +49,7 @@ export function contactChecks({ fields, jobDescription, hasJobDescription }: Che
         CAT, 'B5', 'A link to your work', 2,
         fields.portfolio ? 2 : 0,
         fields.portfolio ?? 'Not found.',
-        'Add a portfolio, personal site or code profile — whichever fits your field. Spell the address out as text so it can be read and clicked.',
+        'Add a portfolio, a personal site or a code profile. Select the type that your field expects. Write the address as text.',
       ),
     );
   }

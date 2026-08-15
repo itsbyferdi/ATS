@@ -14,9 +14,9 @@ interface Props {
 }
 
 /**
- * Three steps, always visible. You can jump back to any step you have already
- * reached, but not forward past one you have not — so the rail is a map, not a
- * set of buttons that fail silently.
+ * The steps are always visible. You can go back to a step that you completed. You cannot
+ * go forward past a step that you did not complete. Thus this is a map and not a set of
+ * buttons that fail without a message.
  */
 export function StepRail({ current, hasResume, onGo }: Props) {
   const index = STEPS.findIndex((s) => s.id === current);

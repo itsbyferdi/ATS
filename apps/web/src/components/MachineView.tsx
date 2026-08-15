@@ -23,9 +23,9 @@ export function MachineView({ fields, text, engines, enginesDisagree }: Props) {
 
       {enginesDisagree && (
         <p className="alert">
-          <b>The two PDF readers disagree about this file.</b> One got text out and one got nothing. That means
-          some employers will read your CV and some will receive a blank page. Rebuild the file before you send
-          it.
+          <b>The two PDF readers do not agree about this file.</b> One reader got text and one reader got
+          nothing. Thus some employers read your CV and some employers get an empty page. Make the file again
+          before you send it.
         </p>
       )}
 
@@ -64,17 +64,17 @@ export function MachineView({ fields, text, engines, enginesDisagree }: Props) {
           </thead>
           <tbody>
             {engines.map((e) =>
-              // A reader that never ran is not a reader that found nothing. Showing its
-              // empty numbers in red made an optional, uninstalled tool look like a fault
-              // in the file.
+              // A reader that did not operate is not the same as a reader that found no
+              // text. Red zeros made an optional tool that is not installed look like a
+              // fault in the file.
               e.ok ? (
                 <tr key={e.engine}>
                   <th scope="row">{e.engine}</th>
                   <td className={e.diagnostics.characters ? '' : 'field-empty'}>{e.diagnostics.characters}</td>
                   <td className={e.diagnostics.textRuns ? '' : 'field-empty'}>{e.diagnostics.textRuns}</td>
-                  <td>{e.diagnostics.drawingOps || '—'}</td>
+                  <td>{e.diagnostics.drawingOps || 'n/a'}</td>
                   <td className={e.diagnostics.tagged === false ? 'field-empty' : ''}>
-                    {e.diagnostics.tagged === undefined ? '—' : e.diagnostics.tagged ? 'stated' : 'guessed'}
+                    {e.diagnostics.tagged === undefined ? 'n/a' : e.diagnostics.tagged ? 'stated' : 'calculated'}
                   </td>
                 </tr>
               ) : (

@@ -1,5 +1,5 @@
 /*
- * Design system ported from rows.gg — tokens read off the live site with Playwright.
+ * The design system comes from rows.gg. Playwright read the tokens from the live site.
  *
  * The character of it: a warm off-white canvas rather than white, near-black rather
  * than black, borders instead of shadows, one accent (the ink itself), and motion that
@@ -21,9 +21,9 @@
 
   /* ink
    * rows.gg's secondary and tertiary greys are #7c7c7c and #989898. At the sizes this
-   * app uses them — 11 to 13px explanatory text — they land at 3.8:1 and 2.6:1 on this
-   * canvas, under the 4.5:1 AA needs. Same hue and same hierarchy, stepped until both
-   * pass: 6.1:1 and 4.6:1. */
+   * app uses, 11px to 13px text, they give 3.8:1 and 2.6:1 on this canvas. AA needs
+   * 4.5:1. These colours keep the same hue and the same order, but they are darker.
+   * They now give 6.1:1 and 4.6:1. */
   --ink: #1a1a1a;
   --ink-2: #5c5c5c;
   --muted: #6f6f6f;
@@ -34,9 +34,10 @@
   --ring: rgba(38, 38, 35, 0.1);
   --track: rgba(38, 38, 35, 0.08);
 
-  /* status — rows' semantic scale, darkened one step for the same reason as the greys.
-   * Their green, amber and orange sit at 4.3:1, 3.8:1 and 3.4:1 on this canvas, and
-   * these run as 12–13px glyphs and labels. Same hues, now 5.2:1, 5.1:1 and 4.8:1. */
+  /* Status colours from rows.gg, darker for the same reason as the greys. Their green,
+   * amber and orange give 4.3:1, 3.8:1 and 3.4:1 on this canvas. The app uses them for
+   * symbols and labels of 12px to 13px. The hues stay the same. They now give 5.2:1,
+   * 5.1:1 and 4.8:1. */
   --good: #0f7548;
   --warning: #9c5502;
   --serious: #a85408;
@@ -166,7 +167,7 @@ button { font: inherit; color: inherit; }
 
 /* ── theme flash ─────────────────────────────────────────────────────────
    Ported from rows.gg: a full-screen wash that peaks at 16% then clears, so
-   the switch reads as one deliberate event instead of a dozen separate ones. */
+   the change looks like one event and not many separate events. */
 @keyframes themeFlash {
   0% { opacity: 0; }
   16% { opacity: 0.5; }
@@ -179,8 +180,8 @@ button { font: inherit; color: inherit; }
 }
 
 /* ── shell ──────────────────────────────────────────────────────────────
-   One column, one thing at a time. The canvas stays quiet and the eye has a
-   single place to land. */
+   One column, one item at a time. The page stays simple and the eye has one
+   place to look. */
 .page {
   max-width: 760px; margin: 0 auto; padding: 28px 20px 24px;
   min-height: 100vh;
@@ -215,7 +216,7 @@ button { font: inherit; color: inherit; }
 }
 
 /* ── step rail ──────────────────────────────────────────────────────────
-   Three steps, always visible, so you know where you are without a diagram. */
+   The steps are always visible. Thus you know your position without a diagram. */
 .rail { display: flex; align-items: center; gap: 6px; margin-bottom: 22px; }
 .rail-step {
   display: inline-flex; align-items: center; gap: 7px;
@@ -240,16 +241,16 @@ button { font: inherit; color: inherit; }
 .rail-line { flex: 1; height: 1px; background: var(--line); }
 
 /* ── panels ─────────────────────────────────────────────────────────────
-   Each step enters with the pill motion from rows.gg: a small overshoot, then
-   settle. Short enough that it never delays you. */
+   Each step comes on the screen with the motion from rows.gg. It moves a small
+   quantity past its position, then stops. It is short and does not delay you. */
 @keyframes panelEnter {
   0% { opacity: 0; transform: translateY(6px) scale(0.99); }
   100% { opacity: 1; transform: none; }
 }
 .panel { animation: panelEnter var(--dur-expressive) var(--ease-out-expo) both; }
-/* Breathing room above the footer. On a short page `margin-top: auto` swallows this and
-   the footer still sits at the bottom; on a long one it is the gap that stops the links
-   crowding the last button. */
+/* Space above the footer. On a short page, `margin-top: auto` uses this space and the
+   footer stays at the bottom. On a long page, this space keeps the links away from the
+   last button. */
 .page > .panel { margin-bottom: 44px; }
 
 .card {
@@ -291,8 +292,8 @@ textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; bor
 .dropzone small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
 
 /* ── buttons ────────────────────────────────────────────────────────────
-   Solid ink primary, quiet ghost secondary, and a 90ms recoil on press — the
-   press timing rows.gg uses, fast enough to feel physical. */
+   The primary button is solid ink. The secondary button is quiet. Each button
+   moves for 90ms when you press it. rows.gg uses this time. */
 .button-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
 .button {
   background: var(--inverse); color: var(--on-inverse); border: 1px solid transparent;
@@ -310,14 +311,14 @@ textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; bor
 .button-quiet { background: transparent; border-color: transparent; color: var(--ink-2); padding: 11px 12px; }
 .button-quiet:hover { color: var(--ink); opacity: 1; }
 
-/* the arrow nudge from rows.gg's "Enjoy the demo" link */
+/* The arrow motion from the "Enjoy the demo" link of rows.gg. */
 .button-next { display: inline-flex; align-items: center; gap: 8px; }
 .button-next svg { transition: transform var(--dur-slow) var(--ease-spring); }
 .button-next:hover svg { transform: translateX(3px); }
 
 /* ── parsing ────────────────────────────────────────────────────────────
-   Reading a CV runs two engines and can take a moment. Naming each stage as it
-   happens is more honest than a spinner, and it teaches what the tool does. */
+   Two readers read a CV, and this can take some seconds. A name for each stage
+   is more accurate than a spinner, and it shows the operation of the tool. */
 @keyframes stageEnter {
   0% { opacity: 0; transform: scale(0.5); }
   55% { opacity: 1; transform: scale(1.09); }
@@ -398,8 +399,8 @@ textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; bor
 
 .problem-list { margin: 12px 0 14px; padding-left: 18px; display: grid; gap: 6px; font-size: 12px; color: var(--ink-2); }
 
-/* The preview is the document itself, so it is styled like paper rather than like the
-   rest of the interface — that is the thing being judged. */
+/* The preview is the document. Thus it looks like paper and not like the other parts of
+   the interface. The document is the item that gets the score. */
 .cv-preview {
   margin-top: 12px; padding: 28px 30px;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
@@ -557,13 +558,13 @@ details summary:hover { color: var(--ink); }
   }
 }
 
-/* Sample-posting chips reuse the keyword chip, minus the status tint. */
+/* The sample buttons use the keyword chip style, without the status colour. */
 .chip-clear { color: var(--ink-2); }
 
 /* ── focus ──────────────────────────────────────────────────────────────
-   Base UI leaves focus rings to the stylesheet, so without this the browser
-   default shows through — a blue ring in an interface that has no blue in it.
-   One visible ring, in ink, on every interactive thing. */
+   Base UI does not give a focus ring. Without these rules, the browser shows its
+   own ring, which is blue. This interface has no blue. Each control gets one
+   visible ring in the ink colour. */
 .segment:focus-visible,
 .template-option:focus-visible,
 .chip:focus-visible,
@@ -579,7 +580,7 @@ details summary:focus-visible {
 .template-option:focus-visible { border-radius: var(--r-lg); }
 .chip:focus-visible, .rail-step:focus-visible, .theme-toggle:focus-visible { border-radius: var(--r-round); }
 
-/* A warning that still lets you proceed, rather than a dead end. */
+/* A warning that permits you to continue. */
 .notice {
   margin-bottom: 12px; padding: 14px 16px;
   background: var(--alert-bg); border: 1px solid var(--line); border-radius: var(--r-lg);
@@ -701,6 +702,6 @@ details summary:focus-visible {
 .footer-link:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: var(--r-xs); }
 .footer-link svg { display: block; opacity: 0.85; }
 
-/* A reader that never ran: stated plainly, not shown as a failure. */
+/* A reader that did not operate. The table gives this clearly, not as a failure. */
 .engine-off th, .engine-off td { color: var(--muted); }
 .engine-off td { text-align: left; }

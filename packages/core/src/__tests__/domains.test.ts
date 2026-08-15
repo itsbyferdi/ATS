@@ -20,7 +20,7 @@ const POSTINGS: Record<string, { jd: string; pack: string; title: string; expect
     pack: 'healthcare',
     title: 'registered nurse',
     expect: ['patient care', 'medication administration'],
-    jd: `Registered Nurse — Ward 4. We are seeking a registered nurse to deliver patient care
+    jd: `Registered Nurse, Ward 4. We are seeking a registered nurse to deliver patient care
       on a busy medical ward. You will carry out patient assessment, medication administration,
       care planning and discharge planning within a multidisciplinary team. Experience with
       electronic health records and infection control required. Safeguarding training essential.
@@ -30,7 +30,7 @@ const POSTINGS: Record<string, { jd: string; pack: string; title: string; expect
     pack: 'software',
     title: 'staff software engineer',
     expect: ['system design', 'code review'],
-    jd: `Staff Software Engineer — Platform. Build and scale our backend services in Go and
+    jd: `Staff Software Engineer, Platform. Build and scale our backend services in Go and
       TypeScript. You will own system design for distributed systems, improve observability and
       monitoring, and mentor engineers. Experience with Kubernetes, Docker, terraform and CI/CD
       pipelines on AWS required. Strong grasp of API design, code review and test automation.`,
@@ -105,7 +105,7 @@ describe('domain packs', () => {
 
   /**
    * Universal terms are always in scope. They will not always reach the top of the list,
-   * and should not — a posting dense with its own vocabulary ought to outrank them.
+   * and they must not. An advert with much of its own vocabulary must have more weight.
    */
   it('puts universal terms in scope for every field', () => {
     for (const [field, { jd }] of Object.entries(POSTINGS)) {

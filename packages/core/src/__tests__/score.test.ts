@@ -22,7 +22,7 @@ const check = (report: ReturnType<typeof scoreResume>, id: string) => {
   return c;
 };
 
-describe('scoreResume — the rebuild must beat the original', () => {
+describe('scoreResume: the new CV must get a better score than the original', () => {
   const before = scoreResume({ text: legacy, jobDescription: SAMPLE_JOB_DESCRIPTION });
   const after = scoreResume({ text: optimised, jobDescription: SAMPLE_JOB_DESCRIPTION });
 
@@ -141,7 +141,7 @@ describe('job match', () => {
 
   /**
    * The old title regex only matched designer titles, and a posting it could not read
-   * still scored 3 of 6 — free points for a test that never ran.
+   * gave 3 of 6 points. These are points for a test that did not operate.
    */
   it('drops the title check instead of awarding free points when it finds no title', () => {
     const posting = `${'We need someone to look after our warehouse stock levels. '.repeat(4)}`;
@@ -198,7 +198,7 @@ describe('hard failure', () => {
 
   /**
    * The regression that mattered: the API returns whichever engine recovered the most
-   * text, so scoring only that engine hid the fact that the other one read nothing —
+   * text. Thus a score from only that reader hid the fact that the other reader got
    * exactly the file this project was built to catch.
    */
   it('still fails when one engine salvages text and another reads nothing', () => {
@@ -240,7 +240,7 @@ describe('reading order (ISO 14289)', () => {
     });
     const a2 = check(untagged, 'A2');
     expect(a2.score).toBeLessThan(a2.max);
-    expect(a2.detail).toContain('does not state a reading order');
+    expect(a2.detail).toContain('does not give a reading order');
   });
 
   it('awards full marks to a tagged PDF with no column signature', () => {

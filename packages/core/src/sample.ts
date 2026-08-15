@@ -1,6 +1,6 @@
 /**
- * Example postings, one per field, so the sample button is not an advert for one
- * profession. They double as readable fixtures for the domain packs in domains.ts.
+ * Example adverts, one for each field. Thus the sample button does not show only one
+ * profession. These adverts are also readable test data for the packs in domains.ts.
  */
 export interface SampleJob {
   id: string;
@@ -49,7 +49,7 @@ What we look for
 - Comfortable with unit testing, integration testing, and debugging live systems.
 - Clear written communication and stakeholder management across cross-functional teams.`;
 
-const NURSING = `Registered Nurse — Acute Medical Ward
+const NURSING = `Registered Nurse, Acute Medical Ward
 
 We are seeking a Registered Nurse to join our acute medical ward. You will deliver patient care to a high standard within a multidisciplinary team.
 

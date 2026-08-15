@@ -42,9 +42,9 @@ function countType3Fonts(pdfjs: any, page: any, ops: { fnArray: number[]; argsAr
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
- * Engine A — pdf.js. Strict about fonts. A PDF whose text was converted to Type 3
- * outlines fails font translation here and yields zero text runs, which is exactly
- * the signal we want to surface.
+ * Reader A: pdf.js. This reader is strict about fonts. If a PDF has text in Type 3
+ * outlines, the font translation fails here and the reader gets zero text. This is the
+ * result that the tool must show.
  */
 export async function extractWithPdfjs(buffer: Buffer): Promise<EngineResult> {
   const diagnostics = empty('Strict PDF reader');
@@ -115,9 +115,9 @@ export async function extractWithPdfjs(buffer: Buffer): Promise<EngineResult> {
 }
 
 /**
- * Engine B — Poppler's pdftotext, a genuinely different implementation. It often
- * salvages text through the ToUnicode map when pdf.js gives up, so a disagreement
- * between the two is itself the finding. Optional: requires poppler-utils.
+ * Reader B: pdftotext from Poppler. This is a different implementation. It frequently
+ * gets text from the ToUnicode map when pdf.js gets nothing. Thus a difference between
+ * the two readers is the result. This reader is optional and needs poppler-utils.
  */
 export async function extractWithPoppler(buffer: Buffer): Promise<EngineResult> {
   const diagnostics = empty('Lenient PDF reader');

@@ -2,16 +2,17 @@ import { findDateRanges, flatten, splitLines } from './text.js';
 import type { ExtractedFields } from './types.js';
 
 /*
- * Every quantifier here is bounded, and deliberately so.
+ * Each quantity here has a limit, on purpose.
  *
- * The unbounded version of the email pattern — [\w.+-]+@ — backtracks quadratically on
- * a long run of word characters that never reaches an "@". A 2 MB paste of ordinary
- * prose took it from milliseconds to over an hour of blocked CPU, which is a denial of
- * service on any deployment that accepts text from the internet.
+ * The email pattern without a limit is [\w.+-]+@ and it is very slow on a long sequence
+ * of word characters with no "@" character. With 2 MB of usual text, the time increased
+ * from milliseconds to more than one hour of CPU. This is a denial of service on each
+ * installation that accepts text from the internet.
  *
- * The limits are the real ones: 64 characters for a local part and 255 for a domain
- * (RFC 5321), 63 for a DNS label. Nothing legitimate is lost, and each start position
- * now fails after a fixed amount of work instead of scanning to the end of the file.
+ * The limits are the real ones: 64 characters for the local part, 255 characters for the
+ * domain (RFC 5321) and 63 characters for a DNS label. The pattern loses no correct
+ * address. Each start position now fails after a fixed quantity of work. It does not
+ * read to the end of the file.
  */
 const EMAIL_RE = /[\w.+-]{1,64}@[\w-]{1,255}\.[\w.]{2,24}/;
 const EMAIL_RE_G = /[\w.+-]{1,64}@[\w-]{1,255}\.[\w.]{2,24}/g;
@@ -26,8 +27,8 @@ const LOCATION_RE = new RegExp(
 );
 
 /**
- * A phone number, not a date range and not a postcode. 8 to 15 digits is the ITU
- * range for a full international number.
+ * Finds a telephone number. Does not find a date range or a postcode. The ITU gives 8 to
+ * 15 digits for a full international number.
  */
 function findPhone(text: string): string | null {
   // Bounded for the same reason as the patterns above: an unbounded run here backtracks
@@ -47,11 +48,11 @@ export function extractFields(text: string): ExtractedFields {
   const head = raw.slice(0, 8).join(' ');
 
   /*
-   * The domain half of an email address matches the URL pattern too, so "alex@acme.com"
-   * used to hand back "acme.com" as a portfolio the person never listed. Comparing by
-   * position rather than by string keeps the case where someone's site genuinely is
-   * their email domain and they list it separately — that occurrence sits outside the
-   * email, so it still counts.
+   * The second half of an email address also matches the pattern for a web address.
+   * Thus "alex@acme.com" gave "acme.com" as a portfolio that the person did not write.
+   * The function compares the position, not the text. Thus it keeps a site that is the
+   * same as the email domain if the person writes it on a different line. That
+   * occurrence is outside the email address, thus it counts.
    */
   const emailRanges: [number, number][] = [];
   for (const m of text.matchAll(EMAIL_RE_G)) {
@@ -75,7 +76,8 @@ export function extractFields(text: string): ExtractedFields {
     phone: findPhone(text),
     location: text.match(LOCATION_RE)?.[0] ?? null,
     linkedin: text.match(LINKEDIN_RE)?.[0] ?? null,
-    // Prefer a URL near the top; a client's site further down is not your portfolio.
+    // Use an address near the top. The site of a client lower in the CV is not your
+    // portfolio.
     portfolio: urls.find((u) => head.includes(u)) ?? urls[0] ?? null,
     dateRanges: findDateRanges(text),
     wordCount: flatten(text).split(' ').filter(Boolean).length,

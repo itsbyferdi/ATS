@@ -18,9 +18,9 @@ interface Props {
 }
 
 /**
- * One view at a time. Everything below the score used to be stacked in a single
- * column, which meant the most useful thing — the short list of fixes — sat under
- * several screens of detail nobody had asked for yet.
+ * The interface shows one view at a time. All the data below the score was in one
+ * column. Thus the most useful part, the short list of corrections, was below several
+ * screens of detail that the user did not ask for.
  */
 export function Results({ report, engines, enginesDisagree, onToggleKeyword }: Props) {
   const [view, setView] = useState<View>('score');
@@ -34,9 +34,10 @@ export function Results({ report, engines, enginesDisagree, onToggleKeyword }: P
   ];
 
   /*
-   * Base UI's Tabs rather than buttons with role="tab". The hand-rolled version looked
-   * right and read right to a screen reader, but left and right arrow keys did nothing
-   * and every tab sat in the tab order — which is not how a tab list is meant to behave.
+   * This code uses the Tabs component of Base UI, not buttons with role="tab". The
+   * previous version looked correct and a screen reader read it correctly. But the left
+   * and right arrow keys did nothing, and each tab was in the tab order. A tab list must
+   * not operate in this way.
    */
   return (
     <Tabs.Root value={view} onValueChange={(v) => setView(v as View)}>
@@ -61,7 +62,7 @@ export function Results({ report, engines, enginesDisagree, onToggleKeyword }: P
           (report.priorityFixes.length ? (
             <PriorityFixes checks={report.priorityFixes} />
           ) : (
-            <p className="empty-state">Nothing left to fix. Every check that can pass, passes.</p>
+            <p className="empty-state">There is nothing to correct. Each check that can pass, passes.</p>
           ))}
 
         {view === 'keywords' && (

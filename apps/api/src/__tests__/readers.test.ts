@@ -12,9 +12,9 @@ const reader = (engine: string, characters: number, ok = true): EngineResult => 
 });
 
 /**
- * "The two readers disagree" is the most serious thing this tool says — it means half of
- * employers would receive a blank page. It has to fire on a genuinely broken file and
- * stay silent otherwise.
+ * The message "the two readers do not agree" is the most serious result of this tool. It
+ * means that one half of employers get an empty page. The tool must give this message
+ * for a damaged file and give no message for a correct file.
  */
 describe('readersDisagree', () => {
   it('fires when one reader gets text and another gets nothing', () => {

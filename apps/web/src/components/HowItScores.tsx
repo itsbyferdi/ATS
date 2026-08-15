@@ -1,11 +1,11 @@
 import { Dialog } from '@base-ui-components/react/dialog';
 
 /**
- * The whole rubric, in one place, including the parts that undercut it.
+ * The full set of rules, in one place, with the limits of the rules.
  *
- * The project's claim is an open rubric — every point visible and arguable. That is only
- * true if the caveats are as easy to find as the score, so the disclaimers sit in the
- * same panel rather than in a footnote somebody has to hunt for.
+ * This project gives an open rubric. Each point is visible and you can disagree with it.
+ * That is true only if the limits are as easy to find as the score. Thus the limits are
+ * in this panel and not in a note at the bottom of a page.
  */
 export function HowItScores() {
   return (
@@ -25,86 +25,92 @@ export function HowItScores() {
 
           <div className="how-body">
             <Dialog.Description className="how-lede">
-              Five groups, 100 points. Leave the job advert out and the last group drops away, so the total is
-              worked out of 75 instead. Every check states the test it ran, so you can disagree with any single
-              one of them.
+              There are five groups and 100 points. If you give no job advert, the last group does not apply and
+              the total comes from 75 points. Each check gives the test that it did. Thus you can disagree with
+              any check.
             </Dialog.Description>
 
-            <h3>Parse Safety — 25 points</h3>
-            <p>Whether software can read the file at all. This is the half that actually matters.</p>
+            <h3>Parse Safety, 25 points</h3>
+            <p>These checks show if software can read the file. This is the part that is most important.</p>
             <ul>
-              <li><b>Words stay whole (7)</b> — files exported from design tools store “Sk ills” instead of “Skills”, and a keyword search finds none of them.</li>
-              <li><b>Reading order is clear (6)</b> — a PDF states its reading order in a structure tree. Without one, a parser guesses from where text sits, which is how a sidebar ends up stitched into your job bullets. An untagged file never scores full marks.</li>
-              <li><b>Sensible length (4)</b> — under 300 words gives a parser nothing; over 1,100 spreads your keywords thin.</li>
-              <li><b>Fonts and symbols are readable (4)</b> — Type 3 fonts store letters as little drawings with no record of which letter they are. Icon fonts and emoji arrive as nothing.</li>
-              <li><b>Contact details sit in the body (4)</b> — many parsers skip page headers, footers and text boxes entirely.</li>
+              <li><b>Words stay complete (7).</b> A file from a design tool contains “Sk ills” in place of “Skills”. A keyword search cannot find these words.</li>
+              <li><b>The reading order is clear (6).</b> A PDF gives its reading order in a structure tree. Without a tree, each program calculates the order from the position of the text. Thus a side column becomes part of your job details. A file with no tree does not get all the points.</li>
+              <li><b>The length is correct (4).</b> Less than 300 words gives a program very little data. More than 1,100 words decreases the density of your keywords.</li>
+              <li><b>The fonts and symbols are readable (4).</b> A Type 3 font keeps letters as drawings and does not record the applicable letter. An icon font and an emoji give no characters.</li>
+              <li><b>The contact data is in the body (4).</b> Many programs do not read a page header, a page footer or a text box.</li>
             </ul>
 
-            <h3>Contact — 15 points</h3>
-            <p>Whether it can find a way to reach you: email (5), phone (3), location (3), LinkedIn (2), and a link to your work (2).</p>
-            <p className="how-note">
-              That last one only counts in fields that expect it — design, code, marketing, writing. An accountant
-              with no portfolio is not doing anything wrong, so the check is removed rather than failed.
-            </p>
-
-            <h3>Structure — 20 points</h3>
-            <ul>
-              <li><b>Standard section headings (6)</b> — software uses these to work out where your job history starts.</li>
-              <li><b>Machine-readable dates (6)</b> — your years of experience are counted from these. A missing range can read as zero years.</li>
-              <li><b>Newest job first (4)</b> — many systems take the first job they find as your current title.</li>
-              <li><b>No duplicated dates (4)</b> — two jobs with identical dates is nearly always a copy-paste slip.</li>
-            </ul>
-
-            <h3>Impact Language — 15 points</h3>
+            <h3>Contact, 15 points</h3>
             <p>
-              Verb-first bullets (5), numbers in your results (5), bullet length (3), no filler or first person (2).
+              These checks show if software can find a way to contact you: email address (5), telephone number
+              (3), location (3), LinkedIn address (2) and a link to your work (2).
             </p>
             <p className="how-note">
-              <b>No hiring software measures any of this.</b> It is here because a human decides what happens after
-              the search, and this is what they skim. Treat it as writing advice, not as anything a machine checks.
+              The last check applies only to fields that usually ask for a link, for example design, software,
+              marketing and writing. An accountant with no portfolio does nothing incorrect. Thus the program
+              removes the check and does not fail it.
             </p>
 
-            <h3>Job Match — 25 points</h3>
+            <h3>Structure, 20 points</h3>
             <ul>
-              <li><b>Keyword coverage (14)</b> — how many of the advert’s terms your CV uses. Near-synonyms count, so “usability studies” satisfies “usability testing”.</li>
-              <li><b>The job title appears (6)</b> — recruiters search by title before anything else. If no title can be read from the advert, the check is dropped rather than half-awarded.</li>
-              <li><b>Top terms in your current role (5)</b> — recent work counts for more than the same skill under a 2019 job.</li>
+              <li><b>Usual section headings (6).</b> Software uses these headings to find the start of your job history.</li>
+              <li><b>Dates a program can read (6).</b> A program calculates your years of experience from these dates. A date that is not there can count as zero years.</li>
+              <li><b>The newest job is first (4).</b> Many programs use the first job in the file as your current job title.</li>
+              <li><b>No dates occur two times (4).</b> Two jobs with the same dates are almost always a copy error.</li>
+            </ul>
+
+            <h3>Impact Language, 15 points</h3>
+            <p>
+              Items that start with a verb (5), numbers in your results (5), the length of each item (3), no
+              filler words and no first person (2).
+            </p>
+            <p className="how-note">
+              <b>No hiring software measures these things.</b> They are here because a person makes the decision
+              after the search, and these are the parts that the person reads. Use them as advice about writing,
+              not as a test that a machine does.
+            </p>
+
+            <h3>Job Match, 25 points</h3>
+            <ul>
+              <li><b>Keyword coverage (14).</b> The quantity of terms from the advert that your CV uses. Terms with almost the same meaning count. Thus “usability studies” is a match for “usability testing”.</li>
+              <li><b>Your CV uses the job title (6).</b> Recruiters search by job title before they search for anything else. If the program cannot read a title from the advert, it removes this check.</li>
+              <li><b>The most important terms are in your current job (5).</b> Recent work counts for more than the same skill in a job from 2019.</li>
             </ul>
             <p>
-              The advert is read to work out which field it is for, and you are scored against that field’s
-              vocabulary — clinical terms for a nursing post, accounting terms for an accounting post.
+              The program reads the advert to find the applicable field. Then it gives you a score against the
+              vocabulary of that field: clinical terms for a nursing advert, accounting terms for an accounting
+              advert.
             </p>
 
             <h3 className="how-warn">What this score is not</h3>
             <ul>
               <li>
-                <b>No real hiring system gives out a score from 100.</b> Greenhouse sorts people into five bands.
-                Workday grades A to D. This number is ours, and it exists to compare one draft of your CV against
-                your next one — nothing more.
+                <b>No hiring system gives a score from 100.</b> Greenhouse puts people into five groups. Workday
+                gives a grade from A to D. This number is ours. Use it to compare one version of your CV with the
+                next version, and for nothing more.
               </li>
               <li>
-                <b>Nothing here is rejecting you automatically.</b> Greenhouse states in its own documentation that
-                it never advances or rejects anyone on its own. A recruiter decides.
+                <b>No system here refuses you automatically.</b> Greenhouse states in its documentation that it
+                does not advance or refuse a person by itself. A recruiter makes the decision.
               </li>
               <li>
-                <b>The “75% of CVs are auto-rejected” figure has no research behind it.</b> It traces back to a
-                company that shut down in 2013.
+                <b>There is no research for the statement that systems refuse 75% of CVs.</b> That number comes
+                from a company that closed in 2013.
               </li>
               <li>
-                <b>The weightings that actually rank you are invisible.</b> They are set by whoever posted the job,
-                on controls you will never see. Any outside score is an informed guess at them.
+                <b>You cannot see the weights that put you in order.</b> The employer sets them with controls
+                that nobody outside the company can see. Thus each score from outside is an estimate.
               </li>
               <li>
-                <b>The points are a judgement, not a standard.</b> Two parts are grounded in real specifications —
-                ISO 32000 for fonts and ISO 14289 for reading order — but nobody publishes an official CV score,
-                which is exactly why every scanner online gives you a different number.
+                <b>These points are a judgement, not a standard.</b> Two parts use real specifications: ISO 32000
+                for fonts and ISO 14289 for the reading order. But nobody publishes an official CV score. This is
+                why each scanner on the internet gives a different number.
               </li>
             </ul>
 
             <p className="how-note">
-              What does hold true everywhere is much simpler: a detail the software cannot pull out is a detail
-              nobody can search for. That is what Parse Safety and Contact protect, and it is the part worth taking
-              seriously.
+              One rule is true for each system: if the software cannot get a detail, nobody can search for it.
+              The Parse Safety and Contact groups protect that rule. This is the part that is important.
             </p>
           </div>
         </Dialog.Popup>

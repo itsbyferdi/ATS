@@ -43,16 +43,17 @@ const TITLE_RE = new RegExp(
 );
 
 /**
- * Rank the terms a posting actually leans on. Lexicon phrases outrank lexicon
- * words, which outrank plain repeated words. Synonym groups collapse to one entry
- * so a resume is never punished twice for the same idea.
+ * Puts the terms of an advert in order of importance. A phrase from the vocabulary has
+ * more weight than a word from the vocabulary. A word from the vocabulary has more
+ * weight than a usual word that occurs many times. Each synonym group gives one entry,
+ * thus a CV does not get two penalties for one idea.
  */
 export function extractJobKeywords(jobDescription: string): { term: string; weight: number; fromLexicon: boolean }[] {
   const flat = ` ${flatten(jobDescription)} `;
   const scored = new Map<string, number>();
 
-  // Only the vocabulary of the fields this posting is about, plus the universal set.
-  // Ranking a nursing post against design terms would bury the words that matter.
+  // Use only the vocabulary of the applicable fields and the universal set. Design
+  // terms in a nursing advert hide the words that are important.
   const lexicon = lexiconFor(flat);
   const lexiconSet = new Set(lexicon);
 
@@ -87,8 +88,9 @@ export function extractJobKeywords(jobDescription: string): { term: string; weig
 }
 
 /**
- * Postings put the title at the top, so only the opening is searched. Looking at the
- * whole posting picks up every passing mention of "the hiring manager" instead.
+ * An advert puts the title at the top, thus this function reads only the first part. A
+ * search of the full advert finds each mention of "the hiring manager" and other titles
+ * that are not the correct one.
  */
 export function jobTitleFrom(jobDescription: string): string | null {
   const opening = jobDescription.slice(0, 300);
@@ -122,13 +124,14 @@ export function jobMatchChecks(ctx: CheckContext): JobMatchResult {
     makeCheck(
       CAT, 'E1', 'Keyword coverage', 14,
       coverage * 14,
-      `Your CV uses ${matched.length} of the ${live.length} terms this posting leans on (${Math.round(coverage * 100)}%). There is no official pass mark — every employer sets its own, and modern systems also match near-synonyms rather than exact words.`,
-      'Work the missing terms into your bullets and skills line, in the posting\'s own wording. Never paste a block of keywords; put each one where it is actually true.',
+      `Your CV uses ${matched.length} of the ${live.length} important terms in this advert (${Math.round(coverage * 100)}%). There is no official pass mark. Each employer sets a different one. Current systems also accept terms with almost the same meaning.`,
+      'Add the missing terms to your job items and your skills line. Use the words of the advert. Do not put a block of keywords in the CV. Put each term in a place where it is true.',
     ),
   ];
 
-  // E2 — recruiters search by job title before anything else. When the posting has no
-  // detectable title the check is dropped entirely, rather than handing out free points.
+  // E2. Recruiters search by job title before they search for anything else. If the
+  // advert has no title that this function can read, the check is removed. The check
+  // does not give points that the CV did not earn.
   const jobTitle = jobTitleFrom(jobDescription);
   if (jobTitle) {
     const exact = termPresent(flat, jobTitle);
@@ -138,16 +141,17 @@ export function jobMatchChecks(ctx: CheckContext): JobMatchResult {
     );
     checks.push(
       makeCheck(
-        CAT, 'E2', 'The job title appears in your CV', 6,
+        CAT, 'E2', 'Your CV uses the job title', 6,
         exact ? 6 : core ? 3 : 0,
-        `The posting is for "${jobTitle}" — ${exact ? 'you use that exact title.' : core ? 'you use part of it.' : 'you never use it.'}`,
-        `Recruiters search by job title before anything else. Put "${jobTitle}" in a headline under your name, or in your summary line. Leave the real titles in your job history exactly as they are.`,
+        `The advert is for "${jobTitle}". ${exact ? 'Your CV uses this exact title.' : core ? 'Your CV uses part of this title.' : 'Your CV does not use this title.'}`,
+        `Recruiters search by job title before they search for anything else. Put "${jobTitle}" in a heading below your name or in your summary line. Do not change the real titles in your job history.`,
       ),
     );
   }
 
-  // E3 — recency is weighted, so a skill that only appears under a 2019 job counts for
-  // far less. The recent block runs from the experience heading to the second role.
+  // E3. A recent job has more weight. A skill that occurs only in a job from 2019
+  // counts for much less. The recent block starts at the experience heading and stops
+  // at the second job.
   const experienceIndex = text.search(SECTION_PATTERNS.experience);
   const start = experienceIndex > -1 ? experienceIndex : 0;
   const later = fields.dateRanges.filter((r) => r.index > start);
@@ -158,10 +162,10 @@ export function jobMatchChecks(ctx: CheckContext): JobMatchResult {
   const inRecent = topTerms.filter((k) => hasTerm(recentBlock, k.term)).length;
   checks.push(
     makeCheck(
-      CAT, 'E3', 'Top terms sit in your current role', 5,
+      CAT, 'E3', 'The most important terms are in your current job', 5,
       topTerms.length ? (inRecent / topTerms.length) * 5 : 0,
-      `${inRecent} of this posting's ${topTerms.length} strongest terms appear in your most recent job.`,
-      'Recent work counts for more. A skill listed only under a 2019 job is worth far less than the same skill under your current one. Move the relevant work up.',
+      `${inRecent} of the ${topTerms.length} most important terms in this advert are in your most recent job.`,
+      'Recent work counts for more. A skill in a job from 2019 has much less value than the same skill in your current job. Move the applicable work to the top.',
     ),
   );
 

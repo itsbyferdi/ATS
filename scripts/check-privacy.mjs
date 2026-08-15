@@ -1,12 +1,12 @@
 /**
- * Proves the privacy claim instead of asserting it.
+ * Gives proof of the privacy statement.
  *
- * Drives the whole tool in a real browser with a marker string planted inside the CV,
- * records every network request the page makes, and fails if any of them leaves this
- * machine or carries the marker.
+ * This script operates the full tool in a browser. It puts a marker string in the CV. It
+ * records each network request of the page. It fails if a request goes to a different
+ * machine or contains the marker.
  *
- * Needs Playwright, which is not a dependency of this project because nothing else uses
- * it:
+ * This script needs Playwright. Playwright is not a dependency of this project, because
+ * no other part uses it. To install it and run the script:
  *
  *   npx playwright install chromium
  *   npm run dev                      # in another terminal
@@ -59,7 +59,7 @@ const step = async (fn) => {
   try {
     await fn();
   } catch {
-    /* a step that is not reachable in this run is not a privacy failure */
+    /* A step that this run cannot do is not a privacy failure. */
   }
 };
 
@@ -88,5 +88,5 @@ console.log(`requests leaving this machine: ${offMachine.length}`);
 offMachine.forEach((r) => console.log(`   ${r}`));
 console.log(`requests carrying the CV marker: ${carryingMarker.length}`);
 carryingMarker.forEach((r) => console.log(`   ${r}`));
-console.log(failed ? '\nFAIL — something left the machine.' : '\nPASS — nothing left the machine.');
+console.log(failed ? '\nFAIL. Data went to a different machine.' : '\nPASS. No data left this machine.');
 process.exit(failed ? 1 : 0);

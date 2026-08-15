@@ -4,9 +4,9 @@ import { isPrivateAddress } from '../jobUrl.js';
 
 /**
  * This is the guard that stops the link reader being pointed at things the caller could
- * not reach themselves — cloud metadata, an admin panel on loopback, a machine on the
- * same network. It is the one piece of this project that makes outbound requests on a
- * stranger's say-so, so the ranges are worth testing rather than eyeballing.
+ * not get: cloud metadata, an admin page on loopback and a machine on the same network.
+ * This is the only part of this project that sends a request because an unknown person
+ * asked for it. Thus a test of the ranges is necessary.
  */
 describe('isPrivateAddress', () => {
   const blocked = [

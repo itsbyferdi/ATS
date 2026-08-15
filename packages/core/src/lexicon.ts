@@ -1,13 +1,13 @@
 /**
- * Vocabulary the scorer reasons with. Kept in plain lists so the rubric can be argued
- * with directly — every term here is visible, none of it is learned or hidden.
+ * The vocabulary that the scorer uses. The lists are simple, thus you can disagree with
+ * the rubric directly. Each term is visible. The program does not learn or hide terms.
  *
- * Field-specific vocabulary lives in domains.ts, one pack per field. This file holds the
- * parts that apply to any CV in any profession.
+ * The vocabulary for each field is in domains.ts, one pack for each field. This file has
+ * the parts that apply to a CV in any profession.
  */
 import { ALL_TERMS } from './domains.js';
 
-/** Words that carry no signal when ranking job-description terms by frequency. */
+/** Words that give no data when the program counts the terms of an advert. */
 export const STOP_WORDS = new Set<string>(
   `a about above after again against all am an and any are as at be because been before being below
    between both but by cannot could did do does doing down during each few for from further had has
@@ -32,21 +32,21 @@ export const STOP_WORDS = new Set<string>(
 );
 
 /**
- * Every term the scorer knows, across every field. `jobMatch` narrows this to the packs
- * a posting is actually about; the full list is the fallback when there is no posting.
- * To teach it a new profession, add a pack in domains.ts — nothing here needs changing.
+ * All the terms that the scorer knows, for all fields. `jobMatch` decreases this to the
+ * packs that apply to the advert. If there is no advert, the program uses the full list.
+ * To add a profession, add a pack in domains.ts. You do not have to change this file.
  */
 export const LEXICON: string[] = ALL_TERMS;
 
 export const LEXICON_SET = new Set(LEXICON);
 
 /**
- * Any member found in the resume satisfies the whole group. This is what stops the
- * scanner punishing a CV for saying "usability studies" when the posting said
- * "usability testing" — the failure mode that makes most online scanners untrustworthy.
+ * One member of a group is sufficient for the full group. Thus the scanner does not give
+ * a penalty to a CV that says "usability studies" when the advert says "usability
+ * testing". This error makes most scanners on the internet unreliable.
  *
- * British and American spellings are grouped throughout, because a CV should never be
- * marked down for which side of the Atlantic it was written on.
+ * Each group contains the British and the American spelling. A CV must not get a lower
+ * score because of the country of the writer.
  */
 export const SYNONYM_GROUPS: string[][] = [
   // universal
@@ -108,9 +108,9 @@ export const SYNONYM_GROUPS: string[][] = [
 ];
 
 /**
- * Verbs that open a strong bullet, across professions — a nurse administers, a lawyer
- * drafts, an electrician installs. Scoring only the vocabulary of one industry is how a
- * checker ends up telling a teacher their CV is badly written.
+ * Verbs that start a strong item, for all professions. A nurse administers, a lawyer
+ * drafts, an electrician installs. A checker that uses the vocabulary of one industry
+ * tells a teacher that the CV is bad, which is incorrect.
  */
 export const ACTION_VERBS = new Set<string>(
   `led lead leads managed manage directed direct headed oversaw supervised coordinated
@@ -152,10 +152,10 @@ export const WEAK_OPENERS = [
 ];
 
 /**
- * Probe words for split-word detection. If a probe appears in the text with all spaces
- * removed but not in the text as written, the file is breaking words apart ("Sk ills",
- * "E ducation"). These are words that appear on a CV in any field — using design tool
- * names here meant the check barely fired for anyone else.
+ * Test words that find split words. Remove all the spaces from the text. If a test word
+ * is in the result but not in the text as written, the file breaks words into parts, for
+ * example "Sk ills" and "E ducation". These words occur on a CV in any field. Names of
+ * design tools made the check operate for very few people.
  */
 export const PROBE_WORDS = `skills education experience summary profile projects certifications
   languages references achievements employment history qualifications training awards
@@ -168,9 +168,9 @@ export const PROBE_WORDS = `skills education experience summary profile projects
   .filter(Boolean);
 
 /**
- * Headings a parser looks for when it decides where each section starts. Widened well
- * past the three a design CV happens to use — certifications and licences are the whole
- * ballgame in nursing, law and the trades.
+ * The headings that a program looks for to find the start of each section. This list is
+ * much longer than the three headings of a design CV. Certifications and licences are
+ * the most important part of a CV in nursing, law and the trades.
  */
 export const SECTION_PATTERNS = {
   experience:
@@ -187,8 +187,8 @@ export const SECTION_PATTERNS = {
 } as const;
 
 export const BANDS = [
-  { key: 'strong' as const, min: 80, label: 'Strong', advice: 'This reads cleanly and lines up with the posting. Send it.' },
-  { key: 'nearly' as const, min: 65, label: 'Nearly there', advice: 'It will read fine, but you are missing matches you could have. Fix the items below.' },
-  { key: 'needs-work' as const, min: 45, label: 'Needs work', advice: 'Some of this comes through and some of it gets lost. Fix the failed checks before you apply.' },
-  { key: 'high-risk' as const, min: 0, label: 'High risk', advice: 'Important details are being lost. Rebuild the file before you send it anywhere.' },
+  { key: 'strong' as const, min: 80, label: 'Strong', advice: 'This file reads correctly and agrees with the advert. Send it.' },
+  { key: 'nearly' as const, min: 65, label: 'Nearly there', advice: 'This file reads correctly, but you do not have all the matches that you can get. Correct the items below.' },
+  { key: 'needs-work' as const, min: 45, label: 'Needs work', advice: 'A program gets some of this file and loses some of it. Correct the failed checks before you apply.' },
+  { key: 'high-risk' as const, min: 0, label: 'High risk', advice: 'A program loses important data. Make the file again before you send it.' },
 ];

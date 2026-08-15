@@ -32,15 +32,16 @@ export default function App() {
   const [status, setStatus] = useState('No file loaded');
   const [parsing, setParsing] = useState<{ filename: string; stage: StageId } | null>(null);
 
-  // Every engine that ran, not just the winning one. The server returns whichever
-  // engine recovered the most text, so passing only that one hides the case where a
-  // second engine read nothing at all.
+  // Each reader that operated, not only the best one. The server sends back the reader
+  // that got the most text. If you use only that reader, you hide the condition where a
+  // second reader got no text.
   const engineDiagnostics = useMemo(
     () => extraction.engines.filter((e) => e.ok).map((e) => e.diagnostics),
     [extraction.engines],
   );
 
-  // Scoring is pure and fast, so it runs on every keystroke. No Scan button needed.
+  // The score is a pure function and it is quick. Thus it operates for each key that you
+  // press. The interface does not need a button.
   const report = useMemo(
     () =>
       resume.trim() || extraction.diagnostics
@@ -59,10 +60,10 @@ export default function App() {
     setMuted([]);
     setParsing({ filename: file.name, stage: 'read' });
 
-    // Each stage is a real event, but on a small file they can all fire within a few
-    // milliseconds. A short floor per stage makes the sequence readable rather than a
-    // flicker. It never runs ahead of the work: the chain is awaited before the result
-    // is shown, so the last stage cannot appear before it has actually happened.
+    // Each stage is a real event. On a small file, all the stages can occur in a few
+    // milliseconds. A minimum time for each stage makes the sequence readable. The
+    // program waits for the chain before it shows the result. Thus the last stage cannot
+    // occur before the work is complete.
     let chain = Promise.resolve();
     const paced = (stage: StageId) => {
       chain = chain.then(
@@ -84,16 +85,17 @@ export default function App() {
         diagnostics: outcome.diagnostics,
       });
       const chars = outcome.diagnostics?.characters ?? outcome.text.replace(/\s/g, '').length;
-      setStatus(`${outcome.filename} · ${outcome.primaryEngine} · ${chars.toLocaleString()} characters recovered`);
+      setStatus(`${outcome.filename} · ${outcome.primaryEngine} · ${chars.toLocaleString()} characters`);
       setStep('job');
     } catch (err) {
-      setStatus(`Could not read that file: ${err instanceof Error ? err.message : String(err)}`);
+      setStatus(`The program could not read that file. ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setParsing(null);
     }
   }, []);
 
-  // Typing replaces whatever the extractor produced, so its diagnostics no longer apply.
+  // New text replaces the text from the reader. Thus the data of the reader does not
+  // apply.
   const handleResumeText = useCallback((text: string) => {
     setResume(text);
     setExtraction(NO_EXTRACTION);
@@ -131,8 +133,8 @@ export default function App() {
           <div className="step-head">
             <h2>Start with your CV</h2>
             <p>
-              Drop in the exact file you send to employers. It is read here the same way an employer's software
-              reads it, and nothing leaves this page.
+              Put in the exact file that you send to employers. This page reads it in the same way as the
+              software of an employer. Nothing leaves this page.
             </p>
           </div>
           {parsing ? (
@@ -160,8 +162,8 @@ export default function App() {
           <div className="step-head">
             <h2>Add the job posting</h2>
             <p>
-              Optional. Paste it in and you get a keyword and job-title score too. Skip it and you still get a
-              format and structure score, worked out of 75.
+              This step is optional. If you add the advert, you also get a score for the keywords and the job
+              title. If you do not add it, you get a score for the format and the structure, from 75 points.
             </p>
           </div>
           <JobPanel value={jobDescription} onChange={setJobDescription} />
@@ -182,7 +184,7 @@ export default function App() {
       {step === 'results' && (
         <div className="panel">
           {!report ? (
-            <p className="empty-state">Add a CV first and the score appears here.</p>
+            <p className="empty-state">Add a CV. Then the score comes on this page.</p>
           ) : report.hardFailure ? (
             <div className="card">
               <HardFailure failure={report.hardFailure} />
@@ -196,11 +198,11 @@ export default function App() {
                 onToggleKeyword={toggleKeyword}
               />
               <p className="footnote">
-                This number is ours, not theirs. No real hiring system gives out a score from 100. Greenhouse
-                sorts people into five bands and says in its own documentation that it never rejects or advances
-                anyone on its own. Workday grades A to D. A recruiter still decides. Use this to compare one
-                draft of your CV against the next, and nothing more. What does carry across every system is
-                simpler: a field the software cannot pull out is a field nobody can search for.
+                This number is ours. No hiring system gives a score from 100. Greenhouse puts people into five
+                groups and states in its documentation that it does not refuse or advance a person by itself.
+                Workday gives a grade from A to D. A recruiter makes the decision. Use this number to compare one
+                version of your CV with the next version, and for nothing more. One rule is true for each system:
+                if the software cannot get a field, nobody can search for it.
               </p>
             </>
           )}
@@ -228,12 +230,13 @@ export default function App() {
           <div className="step-head">
             <h2>Rebuild it cleanly</h2>
             <p>
-              Your CV, written back out in a shape software can read: one column, standard headings, dates in a
-              form that parses, contact details as plain text. Same words, different wrapper.
+              This is your CV in a form that software can read: one column, usual headings, dates that a
+              program can parse and contact data as usual text. The words stay the same. Only the format
+              changes.
             </p>
           </div>
           {!report || report.hardFailure ? (
-            <p className="empty-state">Add a CV that can be read first.</p>
+            <p className="empty-state">Add a CV that the program can read.</p>
           ) : (
             <Rebuild text={resume} jobDescription={jobDescription} currentScore={report.score} />
           )}

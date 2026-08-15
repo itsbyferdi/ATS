@@ -31,12 +31,12 @@ export function exportMarkdown(doc: CvDocument, t: Template) {
 }
 
 /**
- * A real .docx, not HTML with the extension changed. The whole point of this tool is
- * that the container has to survive a parser, so shipping a fake one would be a joke at
- * the user's expense.
+ * This function makes a real .docx file. It does not make HTML with a different file
+ * extension. The purpose of this tool is a file that a program can read. Thus a file
+ * that is not a real .docx would be an error against the user.
  *
- * Everything here is deliberately plain: real heading styles, no tables, no text boxes,
- * no header or footer region. Those are the four things that break extraction.
+ * The file is simple on purpose: real heading styles, no tables, no text boxes, no page
+ * header and no page footer. These four things stop a program from reading a file.
  */
 export async function exportDocx(doc: CvDocument, t: Template) {
   const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx');
@@ -87,8 +87,8 @@ export async function exportDocx(doc: CvDocument, t: Template) {
 
 /**
  * PDF via the browser's own print pipeline. It embeds a real font and a real text
- * layer, which is exactly what a design-tool export fails to do — the fault that
- * started this project. The user picks "Save as PDF" in the print dialogue.
+ * layer. A file from a design tool does not do this, which is the fault that started
+ * this project. The user selects "Save as PDF" in the print window.
  */
 export function exportPdf(doc: CvDocument, t: Template) {
   const win = window.open('', '_blank', 'width=820,height=1000');

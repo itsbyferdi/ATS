@@ -3,9 +3,9 @@ import { ScoreHeader } from './ScoreHeader.js';
 
 const ADVICE: Record<HardFailureType['kind'], string> = {
   'no-text-layer':
-    'There is no readable text in this file. Every detail a hiring system wants is missing, so it either creates an empty record or refuses the upload.',
+    'This file has no readable text. Each detail that a hiring system needs is missing. Thus the system makes an empty record or refuses the file.',
   'engine-split':
-    'Some readers get your text out of this file and some get nothing. You do not get to choose which one an employer uses.',
+    'Some readers get your text from this file and some readers get nothing. You cannot select the reader that an employer uses.',
 };
 
 export function HardFailure({ failure }: { failure: HardFailureType }) {
@@ -36,7 +36,7 @@ export function HardFailure({ failure }: { failure: HardFailureType }) {
                 <th scope="row">{d.engine}</th>
                 <td className={d.characters ? '' : 'field-empty'}>{d.characters}</td>
                 <td className={d.textRuns ? '' : 'field-empty'}>{d.textRuns}</td>
-                <td>{d.drawingOps || '—'}</td>
+                <td>{d.drawingOps || 'n/a'}</td>
               </tr>
             ))}
           </tbody>
@@ -63,7 +63,7 @@ export function HardFailure({ failure }: { failure: HardFailureType }) {
             <span className="todo-body">
               <b>Send the DOCX instead</b>
               <span>
-                Almost everything reads DOCX more reliably than PDF, and a DOCX cannot hide its words inside
+                Almost all programs read DOCX more reliably than PDF. A DOCX file cannot hide its words in
                 shapes.
               </span>
             </span>
@@ -73,8 +73,8 @@ export function HardFailure({ failure }: { failure: HardFailureType }) {
             <span className="todo-body">
               <b>Or paste your text here and score that</b>
               <span>
-                That scores your wording and layout. It does not fix the file — the file still fails when you
-                upload it.
+                This gives a score for your words and your layout. It does not correct the file. The file
+                fails again when you send it.
               </span>
             </span>
             <span className="todo-gain">check</span>
@@ -83,8 +83,8 @@ export function HardFailure({ failure }: { failure: HardFailureType }) {
       </section>
 
       <p className="footnote">
-        Different software fails on this file in different ways. One reader salvages your words but breaks them
-        apart. Another gets nothing at all. Neither result puts you in front of a person.
+        Different programs fail on this file in different ways. One reader gets your words but divides them
+        into parts. A second reader gets nothing. Neither result puts your CV in front of a person.
       </p>
     </>
   );

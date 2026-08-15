@@ -65,7 +65,7 @@ app.get('/api/health', (_req, res) => {
 
 export interface ExtractResponse {
   filename: string;
-  /** The text the scorer should use — whichever engine recovered the most. */
+  /** The text for the scorer. It comes from the reader that got the most characters. */
   text: string;
   primaryEngine: string;
   engines: EngineResult[];
@@ -80,10 +80,10 @@ export interface ExtractResponse {
 /**
  * Only readers that actually ran can disagree.
  *
- * Counting every entry meant a reader that is simply not installed — Poppler is
- * optional — looked exactly like a reader that read the file and found nothing. On a
- * machine without it every upload was reported as "the two readers disagree", which is
- * this tool's most serious finding, raised against files that were perfectly fine.
+ * The old code counted each entry. Thus a reader that is not installed, because Poppler
+ * is optional, looked the same as a reader that read the file and found nothing. On a
+ * machine without Poppler, each file gave the message "the two readers do not agree".
+ * This is the most serious result of this tool, and the files had no fault.
  */
 export function readersDisagree(engines: EngineResult[]): boolean {
   const ran = engines.filter((e) => e.ok);
@@ -143,8 +143,8 @@ app.post('/api/extract', upload.single('file'), async (req, res) => {
 
 /**
  * Read a job advert from a link. Kept on the server because a browser cannot fetch
- * another site directly — job boards do not permit it — and kept behind the same rate
- * limit as everything else. See jobUrl.ts for why each guard is there.
+ * data from a different site, because job boards do not permit it. This route uses the
+ * same request limit as the other routes. See jobUrl.ts for the purpose of each guard.
  */
 app.post('/api/job', async (req, res) => {
   const url = (req.body as { url?: unknown } | undefined)?.url;
@@ -171,7 +171,8 @@ const isDiagnostics = (d: unknown): boolean =>
   !!d && typeof d === 'object' && typeof (d as { engine?: unknown }).engine === 'string';
 
 /**
- * Scoring is pure, so the API can offer it too — handy for CI and for scripts.
+ * The score is a pure function, thus the API can give it. This is useful for CI and for
+ * scripts.
  *
  * Every field is checked rather than trusted. Passing `mutedKeywords: "x"` used to
  * reach `.map` on a string and return a 500 carrying the internal error message, which

@@ -1,7 +1,7 @@
 import { SECTION_PATTERNS, SYNONYM_GROUPS } from './lexicon.js';
 import type { DateRange, YearMonth } from './types.js';
 
-/** Lower-case and flatten the quote and dash characters word processors introduce. */
+/** Makes the text lower-case. Replaces the quotation marks and dashes of a word processor. */
 export const normalise = (s: string): string =>
   (s ?? '')
     .toLowerCase()
@@ -19,9 +19,9 @@ export const flatten = (s: string): string =>
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
- * Whole-term match against already-flattened text. Multi-word terms match as
- * phrases; single words tolerate a plural or participle ending so "prototyping"
- * satisfies "prototype".
+ * Finds a full term in text that is already flat. A term of more than one word must
+ * match as a phrase. A single word can have a plural or a verb ending. Thus
+ * "prototyping" is a match for "prototype".
  */
 export function hasTerm(flatHaystack: string, term: string): boolean {
   const t = normalise(term).trim();
@@ -63,7 +63,7 @@ export function parseDatePoint(raw: string): YearMonth | null {
   return null;
 }
 
-/** Months since year zero. Comparable, and cheap. */
+/** The quantity of months from year zero. You can compare these values quickly. */
 export const toMonths = (d: YearMonth): number => d.year * 12 + d.month;
 
 export function findDateRanges(text: string): DateRange[] {
@@ -81,13 +81,14 @@ export function findDateRanges(text: string): DateRange[] {
 const BULLET_RE = /^\s*([•·▪●○◦*‣⁃−-]|\d+[.)])\s*/;
 
 export interface Lines {
-  /** Non-empty lines, trailing whitespace removed. */
+  /** The lines that have content. The function removes the spaces at the end. */
   raw: string[];
-  /** Bullet text with the marker stripped. */
+  /** The text of each item. The function removes the marker. */
   bullets: string[];
   /**
-   * Logical statements. When bullet glyphs did not survive extraction, wrapped
-   * lines are rejoined — a line that opens lower-case continues the one above.
+   * The statements. If the item markers are not in the text, the function joins the
+   * continuation lines. A line that starts with a lower-case letter is a continuation of
+   * the line above it.
    */
   body: string[];
 }

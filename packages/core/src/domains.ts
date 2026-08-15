@@ -1,34 +1,34 @@
 /**
- * Vocabulary, by field.
+ * The vocabulary for each field.
  *
- * The scorer used to know one job: product design. Every other posting fell back to
- * counting repeated words, which is a much weaker signal, so the tool quietly worked
- * far better for designers than for anybody else.
+ * The scorer knew only one job: product design. For each other advert, the scorer only
+ * counted the words that occur many times. This gives much less data. Thus the tool
+ * operated much better for designers than for other people.
  *
- * Instead of one enormous list, terms live in packs. A posting selects the packs whose
- * cues it actually contains, and always gets `UNIVERSAL` on top. An accountant's posting
- * is scored with accounting vocabulary; a nurse's with clinical vocabulary; a field
- * nobody has written a pack for still works, because unknown repeated terms are picked
- * up statistically either way.
+ * The terms are in packs, not in one very long list. An advert selects the packs that
+ * contain its cues, and always gets the `UNIVERSAL` pack. The program scores an advert
+ * for an accountant with accounting vocabulary, and an advert for a nurse with clinical
+ * vocabulary. A field with no pack also operates, because the program counts unknown
+ * terms that occur many times.
  *
- * Adding a field means adding one entry here. Nothing else changes.
+ * To add a field, add one entry here. You do not have to change anything else.
  */
 
 export interface DomainPack {
   id: string;
   name: string;
-  /** Terms whose presence in a posting selects this pack. Kept distinctive. */
+  /** If an advert contains these terms, the tool selects this pack. */
   cues: string[];
-  /** Vocabulary this pack contributes to keyword ranking. */
+  /** The vocabulary that this pack adds to the keyword list. */
   terms: string[];
-  /** Whether a portfolio, code profile or writing samples are normally expected. */
+  /** True if this field usually expects a portfolio, a code profile or examples. */
   expectsPortfolio?: boolean;
 }
 
 /**
- * Applies to every posting. These are the things that get asked for regardless of
- * field — working with other people, owning a budget, hitting a deadline, training
- * someone, reporting upward.
+ * These terms apply to each advert. Employers ask for these things in all fields: work
+ * with other people, control of a budget, completion of work before a date, training of
+ * a person and reports to a manager.
  */
 export const UNIVERSAL: string[] = [
   'stakeholder management', 'cross-functional', 'project management', 'programme management',
@@ -140,8 +140,8 @@ export const DOMAIN_PACKS: DomainPack[] = [
   {
     id: 'sales',
     name: 'Sales and business development',
-    // "pipeline" alone matched "CI/CD pipelines" and pulled sales vocabulary into
-    // engineering postings, so the cue has to be the sales sense of the word.
+    // The word "pipeline" matched "CI/CD pipelines" and added sales vocabulary to
+    // engineering adverts. Thus the cue must be the sales meaning of the word.
     cues: ['sales', 'account executive', 'business development', 'quota', 'sales pipeline', 'pipeline management', 'account manager'],
     terms: [
       'sales strategy', 'business development', 'account management', 'account executive',
@@ -308,8 +308,8 @@ export const DOMAIN_PACKS: DomainPack[] = [
 const has = (haystack: string, term: string) => haystack.includes(` ${term} `) || haystack.includes(` ${term}`);
 
 /**
- * Pick the packs a posting is actually about. More than one can apply — a posting for a
- * data-focused product manager should be scored with both vocabularies.
+ * Selects the packs that apply to an advert. More than one pack can apply. An advert for
+ * a product manager who works with data needs both vocabularies.
  */
 export function selectPacks(flatJobDescription: string): DomainPack[] {
   const padded = ` ${flatJobDescription} `;
@@ -322,13 +322,13 @@ export function selectPacks(flatJobDescription: string): DomainPack[] {
   return scored.slice(0, 3).map((p) => p.pack);
 }
 
-/** The vocabulary to rank a posting's terms against: always universal, plus its fields. */
+/** The vocabulary for an advert: the universal set and the packs of its fields. */
 export function lexiconFor(flatJobDescription: string): string[] {
   const packs = selectPacks(flatJobDescription);
   return [...new Set([...UNIVERSAL, ...packs.flatMap((p) => p.terms)])];
 }
 
-/** Every term across every pack. Used when there is no posting to narrow things down. */
+/** Each term from each pack. The tool uses this list if there is no advert. */
 export const ALL_TERMS: string[] = [
   ...new Set([...UNIVERSAL, ...DOMAIN_PACKS.flatMap((p) => p.terms)]),
 ];

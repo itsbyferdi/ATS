@@ -9,52 +9,51 @@ export function structureChecks({ text, fields }: CheckContext): Check[] {
   const checks: Check[] = [];
   const ranges = fields.dateRanges;
 
-  // C1 — the headings a parser uses to decide where each section begins
+  // C1. A program uses these headings to find the start of each section.
   const found = (Object.keys(SECTION_PATTERNS) as (keyof typeof SECTION_PATTERNS)[]).filter((k) =>
     SECTION_PATTERNS[k].test(text),
   );
   checks.push(
     makeCheck(
-      CAT, 'C1', 'Standard section headings', 6,
+      CAT, 'C1', 'Usual section headings', 6,
       (found.includes('experience') ? 3 : 0) +
         (found.includes('education') ? 2 : 0) +
         (found.includes('skills') ? 1 : 0),
       `Found: ${found.length ? found.join(', ') : 'none'}.`,
-      'No line reads exactly "Experience" or "Professional Experience". Software uses those headings to work out where your job history starts. Without one, your jobs land in the wrong place or nowhere at all.',
+      'The CV has no line with the text "Experience" or "Professional Experience". A program uses this heading to find the start of your job history. Without the heading, your jobs go into the incorrect field or into no field.',
     ),
   );
 
-  // C2 — years of experience are computed from these, so a missing range reads as zero
+  // C2. A program calculates your years of experience from these dates.
   checks.push(
     makeCheck(
-      CAT, 'C2', 'Machine-readable date ranges', 6,
+      CAT, 'C2', 'Dates a program can read', 6,
       ranges.length >= 4 ? 6 : ranges.length >= 2 ? 4 : ranges.length === 1 ? 2 : 0,
-      `${ranges.length} date range${ranges.length === 1 ? '' : 's'} parsed: ${
+      `Found ${ranges.length} date range${ranges.length === 1 ? '' : 's'}: ${
         ranges.slice(0, 6).map((r) => r.raw).join(' · ') || 'none'
       }`,
-      'Write every job as "Month YYYY - Month YYYY", or "Month YYYY - Present" for your current one. Your years of experience get counted from these dates, and a missing one can read as zero years.',
+      'Write each job as "Month YYYY - Month YYYY". Write your current job as "Month YYYY - Present". A program calculates your years of experience from these dates. A date that is not there can count as zero years.',
     ),
   );
 
-  // C3 — many parsers take the first role they find as your current job title,
-  // which is the highest-weighted field in the document.
+  // C3. Many programs use the first job in the file as your current job title.
   const inOrder = ranges.every(
     (r, i) => i === 0 || toMonths(r.start) <= toMonths(ranges[i - 1].start),
   );
   checks.push(
     makeCheck(
-      CAT, 'C3', 'Reverse-chronological order', 4,
+      CAT, 'C3', 'The newest job is first', 4,
       ranges.length < 2 ? 2 : inOrder ? 4 : 0,
       ranges.length < 2
-        ? 'Not enough dates to judge.'
+        ? 'There are too few dates to do this test.'
         : inOrder
-          ? 'Roles run newest to oldest.'
-          : 'A later role appears above an earlier one.',
-      'Put your newest job first. Plenty of systems take the first job they find as your current title, and that is the single field recruiters search on most.',
+          ? 'The jobs go from the newest to the oldest.'
+          : 'A newer job is below an older job.',
+      'Put your newest job first. Many programs use the first job in the file as your current job title. Recruiters search on this field more than any other.',
     ),
   );
 
-  // C4 — two roles with the identical range is almost always a copy-paste error
+  // C4. Two jobs with the same dates are almost always a copy error.
   const duplicates = new Set<string>();
   for (let i = 0; i < ranges.length; i++) {
     for (let j = i + 1; j < ranges.length; j++) {
@@ -63,12 +62,12 @@ export function structureChecks({ text, fields }: CheckContext): Check[] {
   }
   checks.push(
     makeCheck(
-      CAT, 'C4', 'No duplicated or impossible dates', 4,
+      CAT, 'C4', 'No dates occur two times', 4,
       duplicates.size ? 0 : 4,
       duplicates.size
-        ? `Identical range used twice: ${[...duplicates].join(', ')}`
-        : 'No duplicate ranges.',
-      'Two jobs have exactly the same start and end date. That is nearly always a copy-paste slip, and it reads as carelessness. Put the real dates in.',
+        ? `These dates occur two times: ${[...duplicates].join(', ')}`
+        : 'No dates occur two times.',
+      'Two jobs have the same start date and the same end date. This is almost always a copy error, and it looks careless. Put in the correct dates.',
     ),
   );
 
