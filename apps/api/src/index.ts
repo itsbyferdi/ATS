@@ -60,7 +60,7 @@ app.use('/api', (req, res, next) => {
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_BYTES } });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'ats-cv-scoring', version: 1 });
+  res.json({ ok: true, service: 'ats', version: 1 });
 });
 
 export interface ExtractResponse {
@@ -245,7 +245,7 @@ const HOST = process.env.HOST ?? '127.0.0.1';
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, HOST, () => {
-    console.log(`ats-cv-scoring api listening on http://${HOST}:${PORT}`);
+    console.log(`ats api listening on http://${HOST}:${PORT}`);
     if (HOST !== '127.0.0.1' && HOST !== 'localhost') {
       console.warn(`[api] reachable beyond this machine on ${HOST}. Put it behind a proxy.`);
     }

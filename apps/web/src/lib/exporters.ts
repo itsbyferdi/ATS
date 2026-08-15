@@ -63,7 +63,7 @@ export async function exportDocx(doc: CvDoc) {
   }
 
   const file = new Document({
-    creator: 'ats-cv-scoring',
+    creator: 'ATS',
     title: name || 'CV',
     styles: {
       default: {

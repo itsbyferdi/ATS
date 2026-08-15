@@ -9,6 +9,13 @@ import { ScorePanel } from './components/ScorePanel.js';
 import { ThemeToggle } from './components/ThemeToggle.js';
 import { useTheme } from './lib/useTheme.js';
 
+/*
+ * The key keeps the old name of the project on purpose. It is the address of the CV in
+ * the local store of a browser, and a person who wrote one before the project was renamed
+ * still has it under this key. Changing the string would not move their document, it
+ * would hide it, and the editor would open on the example CV as though their work had
+ * never existed.
+ */
 const STORE_KEY = 'ats-cv-scoring:doc';
 
 /** The document stays in this browser. Nothing about it goes to another machine. */

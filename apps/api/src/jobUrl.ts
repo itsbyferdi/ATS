@@ -102,7 +102,7 @@ async function safeFetch(startUrl: string): Promise<{ html: string; finalUrl: st
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: {
         // Identify honestly, and ask for the page a reader would get.
-        'user-agent': 'Mozilla/5.0 (compatible; ats-cv-scoring; +https://github.com/itsbyferdi/ats-cv-scoring)',
+        'user-agent': 'Mozilla/5.0 (compatible; ATS; +https://github.com/itsbyferdi/ATS)',
         accept: 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8',
         'accept-language': 'en',
       },

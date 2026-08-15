@@ -1,5 +1,5 @@
 {
-  "name": "ats-cv-scoring",
+  "name": "ats",
   "private": true,
   "type": "module",
   "workspaces": [

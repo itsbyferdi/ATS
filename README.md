@@ -77,7 +77,7 @@ complete before you start the next step.
 ### Step 1. Download this project
 
 ```bash
-git clone https://github.com/itsbyferdi/ats-cv-scoring.git
+git clone https://github.com/itsbyferdi/ATS.git
 ```
 
 If you get an error about `git`, download the project as a folder. Click the green
@@ -87,7 +87,7 @@ the ZIP file.
 ### Step 2. Go into the project folder
 
 ```bash
-cd ats-cv-scoring
+cd ATS
 ```
 
 `cd` is "change directory". This command gives the folder to the terminal.
