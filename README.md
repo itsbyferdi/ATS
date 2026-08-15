@@ -132,31 +132,46 @@ The white sheet is the document. Click any line and change it. There is no separ
 and no preview, because the sheet is the file that you send.
 
 - **Enter** in a list makes the next item. **Backspace** on an empty item removes it.
-- The controls that add and remove a part appear when the pointer is on that part.
+- The controls that add a part are always visible and say what they add. The controls
+  that move or remove a part appear when the pointer is on that part, or the caret is
+  in it, because those change what you already wrote.
+- A part that you add gets the caret, so you can write in it at once.
 - A paste keeps the words and discards the formatting, because formatting from another
   program is the thing that breaks a CV.
 - The document stays in this browser. Nothing goes to a server.
 
-Four buttons at the top save the file:
+The editor shows one A4 page at a time, at the size the page prints. The arrows below
+the sheet move between the pages. Three pages is the limit, and the editor says so when
+your CV runs past it.
+
+**Download** at the top saves the file. The chevron opens the list:
 
 | File | Use it for |
 |---|---|
-| **DOCX** | Application forms. Programs read this format most reliably. |
+| **Word (.docx)** | Application forms. Programs read this format most reliably. |
 | **PDF** | Email and your own records. Your browser prints it, thus it has real text. |
-| **Markdown** | A copy in a repository. |
-| **Text** | The exact text that a hiring program reads. |
+| **Markdown (.md)** | A copy in a repository. |
+| **Plain text (.txt)** | The exact text that a hiring program reads. |
 
-### On the right: the score
+### On the right: two tabs
 
-Put the advert in the box, or give a link and press **Read**. There are also sample
+**ATS score** holds the number and the five groups behind it. **Job description** holds
+the advert: put it in the box, or give a link and press **Read**. There are also sample
 adverts from six fields.
 
-Press **Check the ATS score**. You get the number, the band and the five groups of
-points. After that, the score follows the document as you write.
+Press **Check the ATS score** and you get the number, the band and the five groups of
+points. You press it once. After that the score stays current: the number follows the
+document while you write.
 
-Press **View details** for the full breakdown: the fixes worth the most points, the
+Press **See every check** for the full breakdown: the fixes worth the most points, the
 keywords from the advert that your CV does not use, and each check with the test that it
-ran.
+ran. **How this is scored**, at the foot of the tab, gives the whole rubric and the
+places where it stops being true.
+
+With no advert the Job Match group cannot be measured. The four groups that remain carry
+75 points between them, and the number you see is that result as a percentage. Add an
+advert and the number moves, because it then includes Job Match. **The two numbers
+measure different things and do not compare.**
 
 **It works for any job.** The tool reads the advert, finds the applicable field, and
 gives a score against the vocabulary of that field: clinical terms for a nursing advert,
@@ -206,7 +221,7 @@ Make sure that the terminal is open and shows the `Local:` address.
 **My CV disappeared**
 The CV is in the local store of this browser. It is not in your account and it is not on
 a server. A different browser, a different computer or a private window shows a new
-document. Keep a copy with the Markdown button.
+document. Keep a copy with the Markdown file.
 
 **The link to the advert does not work**
 The link reader needs the optional second part. See
@@ -271,7 +286,7 @@ The engine is deliberately separate from both. Text goes in, a report comes out;
 nothing about files, HTTP, or React. That is what makes the rubric testable.
 
 ```bash
-npm test         # vitest. 116 tests for the engine and the API
+npm test         # vitest. 111 tests for the engine and the API
 npm run typecheck
 npm run build
 ```
@@ -280,14 +295,16 @@ Two fixtures drive the tests: text pulled from a two-column PDF, and the single-
 rebuild of the same career. The gap between them is what this project measures.
 
 ```
-legacy-two-column.txt        45/100   needs work
-optimised-single-column.txt  91/100   strong
+legacy-two-column.txt        43/100   high risk
+optimised-single-column.txt  89/100   strong
 ```
 
 ## Scoring
 
-Five groups, 100 points. Job Match drops out with no job description, and the total is
-worked out of 75.
+Five groups, 100 points. With no job description Job Match does not apply, the four
+remaining groups carry 75 points, and the reported score is that result as a percentage.
+`report.score` is therefore always out of 100, and `report.points` / `report.max` hold
+the raw total. A score with an advert and a score without one are not comparable.
 
 | Group | Points | Protects | Audience |
 |---|---|---|---|
@@ -357,12 +374,22 @@ type-checked, and 500s return a generic message while the detail goes to the ser
 
 Tokens, type scale and motion curves were read off [rows.gg](https://rows.gg) with
 Playwright rather than eyeballed: warm off-white canvas, near-black ink, borders instead
-of shadows, 90ms press recoil and 150–340ms transitions on their own easing curves.
+of shadows, and a 90ms press recoil.
 
 Their type is small and this follows it: 13px base, 12px body copy, 11px for supporting
-text and 16px section headings. Two controls need correct keyboard operation: the
-results tabs and the template picker. They use [Base UI](https://base-ui.com). Thus the
-arrow keys move between the items, and only the selected item is in the tab order.
+text and 14–15px section headings. Four controls need correct keyboard operation: the
+side panel tabs, the tabs inside the breakdown, the download menu and the two dialogs.
+They use [Base UI](https://base-ui.com). Thus the arrow keys move between the items, and
+only the selected item is in the tab order.
+
+Motion follows the design-engineering rules from [UI Skills](https://www.ui-skills.com),
+and the stylesheet cites them where it departs. In short: CSS transitions rather than keyframes for anything interactive, so a
+change can be interrupted halfway; `transform` and `opacity` only, never a layout
+property; `ease-out` in both directions, because `ease-in` holds back the moment a person
+is watching; nothing over 300ms, and 90–130ms for feedback on a press. A theme change
+turns every transition off for one frame so the tokens snap instead of smearing, with the
+rows.gg wash over the top. Deleting a part of the document has no animation at all: the
+one thing you want from a delete is proof that the thing has gone.
 
 Two deliberate departures. Their greys and status colours sit between 2.6:1 and 4.3:1 at
 the sizes that this app uses. Thus each colour is one step darker and gives more than

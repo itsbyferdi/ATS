@@ -65,7 +65,10 @@ export function ScoreHeader({ score, band, outOf = 100 }: Props) {
         </p>
         <p className="verdict-advice">{band.advice}</p>
         {outOf !== 100 && (
-          <p className="verdict-note">Worked out of {outOf} points, because there is no job description yet.</p>
+          <p className="verdict-note">
+            There is no advert, so Job Match is not measured. This is the other four groups, {outOf} points
+            between them, turned into a percentage. Add an advert and the number moves.
+          </p>
         )}
         <ul className="verdict-scale">
           <li><i style={{ background: 'var(--critical)' }} />0–44</li>

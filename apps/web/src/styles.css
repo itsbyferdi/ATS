@@ -42,7 +42,6 @@
   --warning: #9c5502;
   --serious: #a85408;
   --critical: #cc0909;
-  --series: var(--ink);
 
   --chip-yes: rgba(15, 117, 72, 0.1);
   --chip-no: rgba(204, 9, 9, 0.08);
@@ -65,20 +64,39 @@
   --tracking-tighter: -0.7px;
   --tracking-tight: -0.2px;
 
-  /* motion */
-  --ease-standard: cubic-bezier(0.2, 0.72, 0.25, 1);
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.3, 1.5, 0.4, 1);
-  --ease-theme: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* motion
+   * Two curves. `--ease-out` decelerates hard, so a thing that arrives lands early and
+   * settles; it runs both entrances and exits, because `ease-in` on an interface holds
+   * back the moment a person is watching and reads as slow. `--ease-swift` is the flatter
+   * curve for a state that changes in place: a colour, a background, a crossfade.
+   *
+   * Nothing in the interface runs longer than 300ms. Feedback on a press or a hover is
+   * 90ms to 130ms, because it has to arrive inside the same gesture. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-swift: cubic-bezier(0.2, 0, 0, 1);
   --dur-recoil: 90ms;
-  --dur-fast: 150ms;
-  --dur-base: 180ms;
+  --dur-fast: 130ms;
+  --dur-base: 170ms;
   --dur-slow: 220ms;
-  --dur-expressive: 340ms;
+  /* The wash over a theme change. It is the one thing permitted past 300ms, because it
+     is a full-surface event and not a control responding to you. */
+  --dur-wash: 340ms;
+
+  /* One scale, so nothing sits at an arbitrary depth. */
+  --z-menu: 60;
+  --z-wash: 90;
+  --z-modal: 100;
 
   --theme-flash: #ffffff;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 1px 2px -1px rgba(0, 0, 0, 0.04), 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 2px 4px -2px rgba(0, 0, 0, 0.06), 0 12px 28px -8px rgba(0, 0, 0, 0.16);
+
+  /* layout
+   * One scale for the gutters, so the top bar, the canvas and the footer line up on the
+   * same left and right edge instead of each choosing its own. */
+  --gutter: 20px;
+  --side-width: 364px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -107,6 +125,7 @@
     --theme-flash: #000000;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -135,6 +154,21 @@
   --theme-flash: #000000;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* The sheet keeps its own colours. A CV is printed on white and read on white, thus the
+   preview does not follow the dark theme. The surface around it does, so the app still
+   has one appearance. */
+:root {
+  --paper: #ffffff;
+  --paper-ink: #111111;
+  --paper-ink-2: #444444;
+  --paper-faint: #9a9a9a;
+  --paper-line: #e2e2e2;
+  --edit-hover: rgba(17, 17, 17, 0.04);
+  --edit-focus: rgba(17, 17, 17, 0.05);
+  --edit-ring: rgba(17, 17, 17, 0.18);
 }
 
 * { box-sizing: border-box; }
@@ -148,8 +182,8 @@ body {
   line-height: 19px;
   font-weight: var(--w-book);
   -webkit-font-smoothing: antialiased;
-  transition: background-color var(--dur-slow) var(--ease-theme),
-    color var(--dur-slow) var(--ease-theme);
+  transition: background-color var(--dur-slow) var(--ease-out),
+    color var(--dur-slow) var(--ease-out);
 }
 
 h1, h2, h3 { margin: 0; font-weight: var(--w-medium); letter-spacing: var(--tracking-tight); }
@@ -174,374 +208,237 @@ button { font: inherit; color: inherit; }
   100% { opacity: 0; }
 }
 .theme-flash {
-  position: fixed; inset: 0; z-index: 90;
+  position: fixed; inset: 0; z-index: var(--z-wash);
   pointer-events: none; background: var(--theme-flash);
-  animation: themeFlash var(--dur-expressive) var(--ease-theme) forwards;
+  animation: themeFlash var(--dur-wash) var(--ease-out) forwards;
 }
 
-/* ── panels ─────────────────────────────────────────────────────────────
-   Each step comes on the screen with the motion from rows.gg. It moves a small
-   quantity past its position, then stops. It is short and does not delay you. */
-@keyframes panelEnter {
-  0% { opacity: 0; transform: translateY(6px) scale(0.99); }
-  100% { opacity: 1; transform: none; }
+/* ── enter and exit ─────────────────────────────────────────────────────
+   A view arrives with a short lift and no scale. A panel that also grows reads as a
+   thing pushed at you, and this one is switched several times a minute.
+
+   Only `opacity` and `transform` move. Both are composited, thus neither can drop a
+   frame while the score is recalculating. */
+@keyframes viewEnter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
 }
-.panel { animation: panelEnter var(--dur-expressive) var(--ease-out-expo) both; }
-/* Space above the footer. On a short page, `margin-top: auto` uses this space and the
-   footer stays at the bottom. On a long page, this space keeps the links away from the
-   last button. */
-.page > .panel { margin-bottom: 44px; }
-
-.card {
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-lg); padding: 20px;
+@keyframes blockEnter {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: none; }
 }
-.card + .card { margin-top: 12px; }
-.card h2 { font-size: 14px; letter-spacing: var(--tracking-tight); }
-.optional { font-weight: var(--w-book); color: var(--muted); }
-.hint { color: var(--ink-2); font-size: 12px; margin: 6px 0 14px; }
-.status { color: var(--muted); font-size: 11px; margin-top: 10px; }
+.panel { animation: viewEnter var(--dur-base) var(--ease-out) both; }
+.is-entering { animation: blockEnter var(--dur-base) var(--ease-out) both; }
 
-textarea {
-  width: 100%; min-height: 148px; resize: vertical;
-  background: var(--page); color: var(--ink);
-  border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px;
-  font-family: var(--font); font-size: 12.5px; line-height: 1.6;
-  transition: border-color var(--dur-fast) var(--ease-standard);
-}
-textarea:hover { border-color: var(--line-strong); }
-textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; border-color: transparent; }
+/* There is no exit here. A part that you delete goes on the press. See lib/motion.ts:
+   holding it on screen so it could be seen leaving meant holding the data behind a
+   timer, and a timer that did not run left an invisible part still taking its space. */
 
-/* ── buttons ────────────────────────────────────────────────────────────
-   The primary button is solid ink. The secondary button is quiet. Each button
-   moves for 90ms when you press it. rows.gg uses this time. */
-.button-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
-.button {
-  background: var(--inverse); color: var(--on-inverse); border: 1px solid transparent;
-  border-radius: 9px; padding: 11px 20px;
-  font-size: 12.5px; font-weight: var(--w-medium); letter-spacing: var(--tracking-tight);
-  cursor: pointer;
-  transition: opacity var(--dur-fast) var(--ease-standard),
-    transform var(--dur-base) var(--ease-standard);
-}
-.button:hover { opacity: 0.86; }
-.button:active { transform: scale(0.97); transition-duration: var(--dur-recoil); }
-.button:disabled { opacity: 0.4; cursor: not-allowed; }
-.button-ghost { background: transparent; color: var(--ink-2); border-color: var(--line); }
-.button-ghost:hover { color: var(--ink); background: var(--surface-hover); opacity: 1; }
-.button-quiet { background: transparent; border-color: transparent; color: var(--ink-2); padding: 11px 12px; }
-.button-quiet:hover { color: var(--ink); opacity: 1; }
+/* ── the frame ──────────────────────────────────────────────────────────
+   The page does not scroll as a whole. The top bar and the footer are fixed
+   parts of the height, and the two columns between them scroll on their own,
+   thus the score stays in view while you write. */
+.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 
-/* The arrow motion from the "Enjoy the demo" link of rows.gg. */
-.button-next { display: inline-flex; align-items: center; gap: 8px; }
-.button-next svg { transition: transform var(--dur-slow) var(--ease-spring); }
-.button-next:hover svg { transform: translateX(3px); }
-
-/* ── segmented view switch ──────────────────────────────────────────────*/
-.segmented {
-  display: flex; gap: 2px; padding: 3px; margin-bottom: 18px;
-  background: var(--surface-2); border-radius: var(--r-md);
-  overflow-x: auto; scrollbar-width: none;
-}
-.segmented::-webkit-scrollbar { display: none; }
-.segment {
-  flex: 1; white-space: nowrap; padding: 7px 12px; border: 0; border-radius: var(--r-sm);
-  background: transparent; color: var(--ink-2); font-size: 12px; cursor: pointer;
-  transition: background-color var(--dur-base) var(--ease-standard), color var(--dur-base) var(--ease-standard);
-}
-.segment:hover { color: var(--ink); }
-.segment[data-active], .segment[aria-selected='true'] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
-.segment:active { transform: scale(0.97); transition-duration: var(--dur-recoil); }
-
-/* ── rebuild ────────────────────────────────────────────────────────────*/
-@media (min-width: 640px) {  }
-
-.rebuild-summary { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-
-/* The preview is the document. Thus it looks like paper and not like the other parts of
-   the interface. The document is the item that gets the score. */
-
-/* ── score header ───────────────────────────────────────────────────────*/
-.score-header { display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
-.gauge { position: relative; width: 132px; height: 132px; flex: none; }
-.gauge-value {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-.gauge-number { font-size: 38px; font-weight: var(--w-medium); letter-spacing: var(--tracking-tighter); line-height: 1; }
-.gauge-denominator { font-size: 10px; color: var(--muted); margin-top: 4px; }
-
-.verdict { min-width: 210px; flex: 1; }
-.verdict-band { display: flex; align-items: center; gap: 7px; font-weight: var(--w-medium); font-size: 15px; }
-.verdict-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
-.verdict-advice { margin-top: 7px; color: var(--ink-2); font-size: 12px; max-width: 56ch; }
-.verdict-note { margin-top: 5px; color: var(--muted); font-size: 11px; }
-.verdict-scale { display: flex; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 10px; color: var(--muted); }
-.verdict-scale li { display: flex; align-items: center; gap: 4px; }
-.verdict-scale i { width: 8px; height: 8px; border-radius: 2px; }
-
-/* ── category bars ──────────────────────────────────────────────────────*/
-.category-bars {
-  margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line);
-  display: grid; gap: 12px;
-}
-.category { display: grid; grid-template-columns: 148px 1fr 58px; gap: 12px; align-items: center; }
-@media (max-width: 520px) { .category { grid-template-columns: 104px 1fr 52px; } }
-.category-label { font-size: 12px; color: var(--ink-2); }
-.category-track { height: 6px; background: var(--track); border-radius: var(--r-round); overflow: hidden; }
-.category-fill {
-  display: block; height: 100%; background: var(--ink); border-radius: var(--r-round);
-  transition: width var(--dur-expressive) var(--ease-out-expo);
-}
-.category-value { font-size: 11.5px; color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; }
-.category-off .category-label, .category-off .category-value { color: var(--muted); }
-
-/* ── groups and checks ──────────────────────────────────────────────────*/
-.group { margin-top: 22px; }
-.group + .group { padding-top: 18px; border-top: 1px solid var(--line); }
-.group h3 { font-size: 12.5px; color: var(--ink); margin-bottom: 3px; }
-
-.check-list { list-style: none; margin: 10px 0 0; padding: 0; }
-.check {
-  display: grid; grid-template-columns: 18px 1fr auto; gap: 10px;
-  padding: 11px 0; border-bottom: 1px solid var(--line); align-items: start;
-}
-.check:last-child { border-bottom: 0; }
-.check-icon { font-size: 13px; line-height: 1.35; font-weight: var(--w-bold); }
-.check-pass { color: var(--good); }
-.check-partial { color: var(--warning); }
-.check-fail { color: var(--critical); }
-.check-body { display: block; }
-.check-label { display: block; font-size: 12.5px; }
-.check-detail { display: block; font-size: 11.5px; color: var(--ink-2); margin-top: 3px; }
-.check-fix {
-  display: block; font-size: 11.5px; color: var(--ink-2); margin-top: 8px;
-  padding: 9px 11px; background: var(--page);
-  border: 1px solid var(--line); border-radius: var(--r-md);
-}
-.check-points { font-size: 11px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-
-/* ── priority fixes ─────────────────────────────────────────────────────*/
-.todo { counter-reset: fix; list-style: none; display: grid; gap: 8px; margin: 10px 0 0; padding: 0; }
-.todo li {
-  display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start;
-  padding: 13px 14px; background: var(--page); border: 1px solid var(--line); border-radius: var(--r-lg);
-  transition: border-color var(--dur-base) var(--ease-standard);
-}
-.todo li:hover { border-color: var(--line-strong); }
-.todo li::before {
-  counter-increment: fix; content: counter(fix);
-  width: 20px; height: 20px; border-radius: var(--r-round);
-  background: var(--inverse); color: var(--on-inverse); font-size: 11px; font-weight: var(--w-medium);
-  display: grid; place-items: center; margin-top: 1px; font-variant-numeric: tabular-nums;
-}
-.todo-body { display: grid; gap: 3px; }
-.todo-body b { font-weight: var(--w-medium); }
-.todo-body span { color: var(--ink-2); font-size: 11.5px; }
-.todo-gain { font-size: 11px; font-weight: var(--w-medium); color: var(--good); white-space: nowrap; font-variant-numeric: tabular-nums; }
-
-/* ── keywords ───────────────────────────────────────────────────────────*/
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.chip {
-  font-size: 11px; padding: 4px 10px; border-radius: var(--r-round);
-  border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer;
-  transition: border-color var(--dur-base) var(--ease-standard),
-    background-color var(--dur-base) var(--ease-standard),
-    opacity var(--dur-base) var(--ease-standard);
-  animation: stageEnter var(--dur-base) var(--ease-spring) both;
-}
-.chip-yes { background: var(--chip-yes); }
-.chip-no { background: var(--chip-no); }
-.chip-muted { opacity: 0.4; text-decoration: line-through; }
-.chip:hover { border-color: var(--line-strong); }
-.chip:active { transform: scale(0.96); transition-duration: var(--dur-recoil); }
-.legend, .muted-text { font-size: 11px; color: var(--muted); margin-top: 10px; }
-
-/* ── machine view ───────────────────────────────────────────────────────*/
-
-details summary { cursor: pointer; color: var(--ink-2); font-size: 12px; padding: 10px 0 4px; }
-details summary:hover { color: var(--ink); }
-
-.empty-state { color: var(--muted); text-align: center; padding: 52px 16px; font-size: 12.5px; }
-.footnote {
-  font-size: 11px; color: var(--muted); margin-top: 20px;
-  border-top: 1px solid var(--line); padding-top: 14px; line-height: 1.6;
-}
-
-/* Motion is decoration here, never information. Switching it off loses nothing. */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
-}
-
-/* The sample buttons use the keyword chip style, without the status colour. */
-.chip-clear { color: var(--ink-2); }
-
-/* ── focus ──────────────────────────────────────────────────────────────
-   Base UI does not give a focus ring. Without these rules, the browser shows its
-   own ring, which is blue. This interface has no blue. Each control gets one
-   visible ring in the ink colour. */
-.segment:focus-visible,
-.chip:focus-visible, 
-/* A warning that permits you to continue. */
-
-/* ── job link import ────────────────────────────────────────────────────*/
-.url-row { display: flex; gap: 8px; margin: 6px 0 0; }
-.url-input {
-  flex: 1; min-width: 0; padding: 10px 12px;
-  background: var(--page); color: var(--ink);
-  border: 1px solid var(--line); border-radius: var(--r-md);
-  font: inherit; font-size: 12px;
-  transition: border-color var(--dur-fast) var(--ease-standard);
-}
-.url-input:hover { border-color: var(--line-strong); }
-.url-input:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; border-color: transparent; }
-.url-input:disabled { opacity: 0.6; }
-.url-row .button { white-space: nowrap; }
-.url-error {
-  margin-top: 8px; padding: 9px 11px; font-size: 11.5px; color: var(--ink);
-  background: var(--alert-bg); border: 1px solid var(--line); border-radius: var(--r-md);
-}
-
-/* ── "How this is scored" ───────────────────────────────────────────────
-   Base UI drives the open and close with data-[open]/data-[starting-style]/
-   data-[ending-style], so both directions can be eased rather than only the
-   entrance. Backdrop fades, panel lifts and settles on the expo curve. */
-.how-trigger {
-  background: none; border: 0; padding: 0; cursor: pointer;
-  color: var(--ink); font-size: 12.5px; font-weight: var(--w-medium);
-  letter-spacing: var(--tracking-tight);
-  border-bottom: 1px solid var(--line-strong);
-  transition: color var(--dur-base) var(--ease-standard),
-    border-color var(--dur-base) var(--ease-standard);
-}
-.how-trigger:hover { border-color: var(--ink); }
-
-.how-backdrop {
-  position: fixed; inset: 0; z-index: 100;
-  background: rgba(26, 25, 29, 0.32);
-  backdrop-filter: blur(3px);
-  transition: opacity var(--dur-slow) var(--ease-standard);
-}
-.how-backdrop[data-starting-style], .how-backdrop[data-ending-style] { opacity: 0; }
-
-.how-popup {
-  position: fixed; z-index: 101;
-  top: 50%; left: 50%;
-  width: min(680px, calc(100vw - 32px));
-  max-height: min(78vh, 720px);
-  display: flex; flex-direction: column;
-  background: var(--surface); color: var(--ink);
-  border: 1px solid var(--line); border-radius: var(--r-xl);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
-  transform: translate(-50%, -50%);
-  transition: opacity var(--dur-slow) var(--ease-out-expo),
-    transform var(--dur-expressive) var(--ease-out-expo);
-}
-.how-popup[data-starting-style], .how-popup[data-ending-style] {
-  opacity: 0;
-  transform: translate(-50%, calc(-50% + 10px)) scale(0.98);
-}
-
-.how-head {
+.topbar {
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 18px 20px; border-bottom: 1px solid var(--line); flex: none;
+  padding: 12px var(--gutter); border-bottom: 1px solid var(--line);
+  background: var(--page); flex: none;
 }
-.how-title { font-size: 15px; font-weight: var(--w-medium); letter-spacing: var(--tracking-tight); }
-.how-close {
-  width: 28px; height: 28px; flex: none; display: grid; place-items: center;
-  background: transparent; border: 1px solid var(--line); border-radius: var(--r-round);
-  color: var(--ink-2); cursor: pointer;
-  transition: background-color var(--dur-base) var(--ease-standard), color var(--dur-base) var(--ease-standard);
-}
-.how-close:hover { background: var(--surface-hover); color: var(--ink); }
-.how-close:active { transform: scale(0.94); transition-duration: var(--dur-recoil); }
-.how-close:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
 
-.how-body { padding: 18px 20px 24px; overflow-y: auto; font-size: 12px; line-height: 1.65; }
-.how-lede { color: var(--ink-2); margin-bottom: 4px; }
-.how-body h3 {
-  font-size: 12.5px; font-weight: var(--w-medium); color: var(--ink);
-  margin: 20px 0 5px; padding-top: 14px; border-top: 1px solid var(--line);
-}
-.how-body h3.how-warn { color: var(--serious); }
-.how-body p { color: var(--ink-2); margin-bottom: 6px; }
-.how-body ul { margin: 6px 0 8px; padding-left: 17px; display: grid; gap: 5px; color: var(--ink-2); }
-.how-body b { color: var(--ink); font-weight: var(--w-medium); }
-.how-note {
-  margin-top: 8px; padding: 10px 12px; font-size: 11.5px;
-  background: var(--page); border: 1px solid var(--line); border-radius: var(--r-md);
+/* The mark. `--inverse` is the token for the opposite of the page, thus the circle is
+   near-black on the light canvas and near-white on the dark one, and it needs no rule of
+   its own for either. `public/icon.svg` carries the same two values for the tab. */
+.logo {
+  width: 22px; height: 22px; flex: none; border-radius: 50%;
+  background: var(--inverse);
+  transition: background-color var(--dur-slow) var(--ease-out);
 }
 
-/* ── footer ─────────────────────────────────────────────────────────────*/
+.workspace {
+  flex: 1; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) var(--side-width);
+}
+
 .site-footer {
   display: flex; align-items: center; justify-content: space-between; gap: 18px;
-  /* Takes the leftover column space, which pins it to the bottom of a short page. */
-  margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line);
+  flex: none;
+  padding: 12px var(--gutter);
+  border-top: 1px solid var(--line);
 }
 .footer-copy { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .footer-links { display: flex; align-items: center; gap: 18px; }
 .footer-link {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 11px; color: var(--muted); text-decoration: none;
-  transition: color var(--dur-base) var(--ease-standard);
+  transition: color var(--dur-base) var(--ease-swift);
 }
 .footer-link:hover { color: var(--ink); }
-.footer-link:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: var(--r-xs); }
 .footer-link svg { display: block; opacity: 0.85; }
 
-/* A reader that did not operate. The table gives this clearly, not as a failure. */
-
-/* ── the workspace ──────────────────────────────────────────────────────
-   The document on the left, the advert and the score on the right. The page
-   does not scroll as a whole: each side scrolls on its own, thus the score
-   stays in view while you write. */
-@keyframes panelEnter {
-  0% { opacity: 0; transform: translateY(6px) scale(0.99); }
-  100% { opacity: 1; transform: none; }
+@media (max-width: 900px) {
+  .app { height: auto; min-height: 100dvh; }
+  .workspace { grid-template-columns: 1fr; }
 }
-.panel { animation: panelEnter var(--dur-expressive) var(--ease-out-expo) both; }
 
-.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-
-.topbar {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 10px 16px; border-bottom: 1px solid var(--line);
-  background: var(--page); flex: none;
+/* ── buttons ────────────────────────────────────────────────────────────
+   The primary button is solid ink. The secondary button is quiet. Each button
+   moves for 90ms when you press it. rows.gg uses this time. */
+.button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  background: var(--inverse); color: var(--on-inverse); border: 1px solid transparent;
+  border-radius: 9px; padding: 9px 16px;
+  font-size: 12.5px; font-weight: var(--w-medium); letter-spacing: var(--tracking-tight);
+  white-space: nowrap; cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease-swift),
+    transform var(--dur-base) var(--ease-swift),
+    background-color var(--dur-base) var(--ease-swift),
+    color var(--dur-base) var(--ease-swift);
 }
-.topbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.topbar-actions .button { padding: 8px 14px; }
+.button:hover { opacity: 0.86; }
+.button:active { transform: scale(0.96); transition-duration: var(--dur-recoil); }
+.button:disabled { opacity: 0.4; cursor: not-allowed; }
+.button-ghost { background: transparent; color: var(--ink-2); border-color: var(--line); }
+.button-ghost:hover { color: var(--ink); background: var(--surface-hover); opacity: 1; }
+.button-quiet { background: transparent; border-color: transparent; color: var(--ink-2); padding: 9px 10px; }
+.button-quiet:hover { color: var(--ink); opacity: 1; }
 
-.workspace {
-  flex: 1; min-height: 0;
-  display: grid; grid-template-columns: minmax(0, 1fr) 340px;
+/* The chevron turns when the menu is open, so the button states which way it goes. */
+.button-split svg { transition: transform var(--dur-base) var(--ease-swift); opacity: 0.7; }
+.button-split[data-popup-open] svg { transform: rotate(180deg); }
+
+/* ── the download menu ──────────────────────────────────────────────────
+   One line for the format and one line for the reason to pick it. Four buttons
+   across the top bar gave four formats equal weight, although only one of them
+   is the answer for almost everybody. */
+.menu-positioner { z-index: var(--z-menu); }
+.menu-popup {
+  min-width: 244px;
+  padding: 5px;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  transform-origin: var(--transform-origin);
+  transition: opacity var(--dur-base) var(--ease-swift),
+    transform var(--dur-base) var(--ease-out);
 }
-@media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } }
+.menu-popup[data-starting-style], .menu-popup[data-ending-style] {
+  opacity: 0; transform: scale(0.97) translateY(-4px);
+}
+/* 12px popup, 5px of padding, thus a 7px item. */
+.menu-item {
+  display: grid; gap: 2px;
+  padding: 8px 10px; border-radius: 7px;
+  cursor: pointer; outline: none;
+  transition: background-color var(--dur-fast) var(--ease-swift);
+}
+.menu-item[data-highlighted] { background: var(--surface-hover); }
+.menu-item-label { font-size: 12.5px; font-weight: var(--w-medium); }
+.menu-item-note { font-size: 11px; color: var(--muted); }
+
+/* ── segmented view switch ──────────────────────────────────────────────*/
+/* The track is 8px and holds 3px of padding, thus a tab is 5px. An inner radius equal
+   to the outer one leaves a visible gap at each corner. */
+.segmented {
+  display: flex; gap: 2px; padding: 3px;
+  background: var(--surface-2); border-radius: var(--r-md);
+}
+.segment {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  white-space: nowrap; padding: 7px 10px; border: 0; border-radius: 5px;
+  background: transparent; color: var(--ink-2); font-size: 12px; cursor: pointer;
+  transition: background-color var(--dur-base) var(--ease-swift), color var(--dur-base) var(--ease-swift);
+}
+.segment:hover { color: var(--ink); }
+.segment[data-selected], .segment[aria-selected='true'] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+.segment:active { transform: scale(0.96); transition-duration: var(--dur-recoil); }
+/* States that the tab has something in it, beside a word that says so. */
+.segment-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--good); flex: none; }
 
 /* ── the canvas ─────────────────────────────────────────────────────────
-   A grey table with a sheet of paper on it. The paper keeps A4 proportions
-   and the same measurements as the printed file, thus what you see is the
-   file that you send. */
+   A grey table with a sheet of paper on it, and a bar under the table that
+   holds the page controls. The bar is outside the part that scrolls, thus the
+   arrows are in the same place at every scroll position and they never cover
+   the line you are writing. */
 .canvas {
-  overflow-y: auto; padding: 28px 24px 56px;
+  min-height: 0;
+  display: grid; grid-template-rows: minmax(0, 1fr) auto;
   background: var(--surface-2);
+}
+.canvas-scroll {
+  overflow-y: auto; padding: 28px var(--gutter) 28px;
   display: flex; flex-direction: column; align-items: center; gap: 14px;
 }
-.canvas-note { font-size: 11px; color: var(--muted); max-width: 794px; }
+.canvas-note { font-size: 11px; color: var(--muted); max-width: 794px; text-align: center; }
 
-.paper {
-  width: 100%; max-width: 794px;   /* A4 at 96dpi */
-  min-height: 1000px;
-  padding: 56px 60px 72px;
+.canvas-foot {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 10px var(--gutter);
+  background: var(--page); border-top: 1px solid var(--line);
+}
+
+/* ── the sheet ──────────────────────────────────────────────────────────
+   A4 at 96dpi, which is the resolution a browser uses for a CSS pixel. The
+   frame never changes size: the document inside it moves up by one page at a
+   time. `flex: none` matters. Without it the sheet is a flex item that shrinks
+   to its shortest permitted height and the document runs out of the bottom of
+   it and onto the grey.
+
+   The edge is drawn with an inset shadow and not with a border. Every box here is
+   `border-box`, thus a 1px border takes its two pixels out of the space inside the
+   sheet, and the window on the document is then 1009px where `lib/paginate.ts`
+   measures 1011. The last two pixels of the last line of a page were cut off. An
+   inset shadow draws the same line and takes no space. */
+.sheet {
+  flex: none;
+  width: 794px; height: 1123px;
+  padding: 56px 60px;
   background: var(--paper); color: var(--paper-ink);
-  border: 1px solid var(--line);
   border-radius: 3px;
-  box-shadow: var(--shadow-md);
+  box-shadow: inset 0 0 0 1px var(--line), var(--shadow-md);
   font-family: 'Inter Variable', Inter, system-ui, sans-serif;
   font-size: 13px; line-height: 1.55;
+}
+/* The height is set on the element, one page at a time. See `Paper.tsx`. */
+.sheet-body { height: 100%; overflow: hidden; }
+.cv-flow { transition: transform var(--dur-slow) var(--ease-out); }
+
+/* A narrow window cannot hold 794px beside the side panel. The sheet keeps its
+   proportions and gets smaller as one piece, so the page break stays where the
+   printed page break is. */
+@media (max-width: 1220px) {
+  .canvas-scroll { padding-left: 12px; padding-right: 12px; }
+  .sheet { transform: scale(0.82); transform-origin: top center; margin-bottom: -202px; }
+}
+@media (max-width: 1040px) {
+  .sheet { transform: scale(0.68); margin-bottom: -359px; }
+}
+
+/* ── moving between the pages ───────────────────────────────────────────*/
+.pager {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px; border-radius: var(--r-round);
+  background: var(--surface); border: 1px solid var(--line);
+}
+.pager-arrow {
+  width: 28px; height: 28px; display: grid; place-items: center;
+  background: transparent; border: 0; border-radius: var(--r-round);
+  color: var(--ink-2); cursor: pointer;
+  transition: background-color var(--dur-base) var(--ease-swift),
+    color var(--dur-base) var(--ease-swift), border-color var(--dur-base) var(--ease-swift);
+}
+.pager-arrow:hover:not(:disabled) { background: var(--surface-hover); color: var(--ink); }
+.pager-arrow:active:not(:disabled) { transform: scale(0.96); transition-duration: var(--dur-recoil); }
+.pager-arrow:disabled { opacity: 0.32; cursor: not-allowed; }
+.pager-count {
+  min-width: 96px; text-align: center;
+  font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums;
+}
+.pager-warning {
+  max-width: 720px; text-align: center;
+  padding: 9px 14px; font-size: 11.5px; line-height: 1.55; color: var(--ink);
+  background: var(--alert-bg); border: 1px solid var(--line); border-radius: var(--r-md);
 }
 
 /* ── editable text ──────────────────────────────────────────────────────
@@ -550,8 +447,8 @@ details summary:hover { color: var(--ink); }
 .editable {
   outline: none; border-radius: 3px;
   padding: 1px 3px; margin: -1px -3px;
-  transition: background-color var(--dur-fast) var(--ease-standard),
-    box-shadow var(--dur-fast) var(--ease-standard);
+  transition: background-color var(--dur-fast) var(--ease-swift),
+    box-shadow var(--dur-fast) var(--ease-swift);
   min-width: 1ch;
 }
 .editable:hover { background: var(--edit-hover); }
@@ -595,56 +492,111 @@ details summary:hover { color: var(--ink); }
 .cv-bullets { margin: 6px 0 0; padding-left: 17px; }
 .cv-bullets li { margin-bottom: 4px; }
 
-/* Controls stay invisible until the pointer is on the part that owns them. */
-.cv-add {
-  background: none; border: 1px dashed var(--paper-line); border-radius: var(--r-sm);
-  color: var(--paper-faint); font-size: 10px; padding: 2px 8px; cursor: pointer;
-  margin-top: 5px;
-  /* The space stays reserved. If these appeared and disappeared, the whole document
-     would move under the pointer. */
-  opacity: 0; transition: opacity var(--dur-base) var(--ease-standard),
-    color var(--dur-base) var(--ease-standard), border-color var(--dur-base) var(--ease-standard);
-}
-.cv-add-inline { margin-left: 4px; }
-.cv-add-section { display: flex; gap: 6px; margin-top: 20px; }
-.paper:hover .cv-add, .cv-add:focus-visible { opacity: 1; }
-.cv-add:hover { color: var(--paper-ink); border-color: var(--paper-ink); }
+/* The controls that add a part say what they add and show it. They are quiet, because
+   they are not the document, but they are always legible: a control that appears only
+   under the pointer is a control that a person does not know exists.
 
-.cv-tools { display: inline-flex; gap: 2px; opacity: 0; transition: opacity var(--dur-base) var(--ease-standard); }
-.cv-tools button {
-  background: none; border: 0; cursor: pointer; padding: 2px 5px; border-radius: var(--r-xs);
-  color: var(--paper-faint); font-size: 12px; line-height: 1;
+   The icon draws in `currentColor` at 12px on a 1px stroke. It therefore carries the
+   colour of the label beside it in every state, including the hover state and the focus
+   state, and one file covers all of them. */
+.cv-add {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: 1px dashed var(--paper-line); border-radius: var(--r-sm);
+  color: var(--paper-faint); font-size: 10.5px; line-height: 1.4;
+  padding: 4px 9px; cursor: pointer; margin-top: 8px;
+  transition-property: color, border-color, background-color, transform;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-swift);
 }
-.cv-tools button:hover { color: var(--paper-ink); background: var(--edit-hover); }
-.cv-tools-entry { padding: 2px 5px; background: none; border: 0; cursor: pointer; color: var(--paper-faint); }
-.cv-section:hover .cv-tools, .cv-entry:hover .cv-tools-entry,
-.cv-tools button:focus-visible, .cv-tools-entry:focus-visible { opacity: 1; }
+.cv-add svg { flex: none; }
+.cv-add:hover { color: var(--paper-ink); border-color: var(--paper-faint); background: var(--edit-hover); }
+.cv-add:active { transform: scale(0.96); transition-duration: var(--dur-recoil); }
+.cv-add-section { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 28px; }
+
+/* Move and remove stay out of the way until the pointer is on the part they belong to,
+   or the caret is in it. These change the document rather than add to it, thus they wait
+   to be asked for. */
+.cv-tools { display: inline-flex; gap: 1px; }
+.cv-tool {
+  display: inline-grid; place-items: center;
+  width: 20px; height: 20px; padding: 0; flex: none;
+  background: none; border: 0; border-radius: var(--r-xs);
+  color: var(--paper-faint); cursor: pointer;
+  opacity: 0;
+  transition-property: color, background-color, opacity, transform;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-swift);
+}
+.cv-tool:hover { color: var(--paper-ink); background: var(--edit-hover); }
+.cv-tool:active { transform: scale(0.96); transition-duration: var(--dur-recoil); }
+/* Inside a line of text rather than beside a heading: smaller, and it holds the baseline. */
+.cv-tool-inline { width: 16px; height: 16px; align-self: center; }
+/* Each control answers to its own part only. A descendant selector here would show
+   every cross in a section the moment the pointer entered any line of it, which is the
+   noise these controls hide themselves to avoid. */
+.cv-section:hover > .cv-section-head .cv-tool,
+.cv-section:focus-within > .cv-section-head .cv-tool,
+.cv-contact-field:hover > .cv-tool, .cv-contact-field:focus-within > .cv-tool,
+.cv-row:hover > .cv-tool, .cv-row:focus-within > .cv-tool,
+.cv-entry:hover > .cv-entry-top .cv-tool, .cv-entry:focus-within > .cv-entry-top .cv-tool,
+.cv-tool:focus-visible { opacity: 1; }
+
+/* The document has just moved under a pointer that did not. See lib/settle.ts: no delete
+   control answers until the pointer moves, so the second press of a double click cannot
+   land on whatever arrived in that spot. A control reached with the keyboard is exempt,
+   because the caret does not arrive on a control by accident. */
+[data-settling] .cv-tool:not(:focus-visible) { opacity: 0; pointer-events: none; }
 
 /* ── the side panel ─────────────────────────────────────────────────────*/
 .side {
   overflow-y: auto; border-left: 1px solid var(--line);
-  background: var(--page); padding: 18px 16px 32px;
-  display: flex; flex-direction: column; gap: 20px;
+  background: var(--page); padding: 16px var(--gutter) 24px;
+  display: flex; flex-direction: column;
 }
 @media (max-width: 900px) { .side { border-left: 0; border-top: 1px solid var(--line); } }
-.side-block { display: block; }
-.side-title { font-size: 12.5px; font-weight: var(--w-medium); margin-bottom: 10px; }
+
+/* One rhythm down the panel: 20px between the tabs and the content, 14px between the
+   things inside a block, 20px where a new subject starts. Before this, six different
+   margins were set one at a time on the elements themselves. */
+/* `flex: 1 0 auto` and not `flex: 1`. The panel fills the height that is left, so the
+   rules sit at the foot of a short tab, and it still grows past that height when the tab
+   holds more than fits, which is what lets the side column scroll instead of clipping.
+   `min-height: 100%` here overflowed by the height of the tab strip above it. */
+.side-tabs { display: flex; flex-direction: column; gap: 20px; flex: 1 0 auto; }
+.side-panel {
+  display: flex; flex-direction: column; flex: 1 0 auto;
+  animation: viewEnter var(--dur-base) var(--ease-out) both;
+}
+.side-block { display: flex; flex-direction: column; gap: 14px; }
+.side-lede { font-size: 11.5px; color: var(--ink-2); line-height: 1.6; }
+.side-label { font-size: 11px; color: var(--muted); margin-bottom: -6px; }
+.side-note { font-size: 11px; color: var(--muted); line-height: 1.6; }
+.side-button { width: 100%; }
+/* The score is the subject of this tab, thus it starts the block and nothing sits above
+   it. What explains it follows, and what you can do next closes it. */
+.side-split {
+  display: flex; flex-direction: column; gap: 8px;
+  padding-top: 14px; border-top: 1px solid var(--line);
+}
+.side-alert {
+  padding: 10px 12px; font-size: 11.5px; line-height: 1.6; color: var(--ink-2);
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-md);
+}
+.side-alert b { color: var(--ink); font-weight: var(--w-medium); }
+
 .side-textarea {
-  width: 100%; min-height: 130px; resize: vertical;
+  width: 100%; min-height: 148px; resize: vertical;
   background: var(--surface); color: var(--ink);
   border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px;
   font-family: var(--font); font-size: 12px; line-height: 1.6;
-  transition: border-color var(--dur-fast) var(--ease-standard);
+  transition: border-color var(--dur-fast) var(--ease-swift);
 }
 .side-textarea:hover { border-color: var(--line-strong); }
-.side-textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; border-color: transparent; }
+.check-button { width: 100%; padding: 11px 16px; }
 
-.check-button { width: 100%; justify-content: center; }
-.details-button { width: 100%; margin-top: 14px; }
-
-.score-summary { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 4px; }
+.score-summary { display: flex; align-items: baseline; gap: 8px; }
 .score-figure {
-  font-size: 40px; font-weight: var(--w-medium);
+  font-size: 44px; font-weight: var(--w-medium);
   letter-spacing: var(--tracking-tighter); line-height: 1; font-variant-numeric: tabular-nums;
 }
 .score-strong { color: var(--good); }
@@ -654,20 +606,263 @@ details summary:hover { color: var(--ink); }
 .score-of { font-size: 11px; color: var(--muted); }
 .score-band { margin-left: auto; font-size: 12.5px; font-weight: var(--w-medium); }
 
+/* ── job link import ────────────────────────────────────────────────────*/
+.url-row { display: flex; gap: 8px; }
+.url-input {
+  flex: 1; min-width: 0; padding: 9px 12px;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  font: inherit; font-size: 12px;
+  transition: border-color var(--dur-fast) var(--ease-swift);
+}
+.url-input:hover { border-color: var(--line-strong); }
+.url-input:disabled { opacity: 0.6; }
+.url-error {
+  padding: 9px 11px; font-size: 11.5px; color: var(--ink);
+  background: var(--alert-bg); border: 1px solid var(--line); border-radius: var(--r-md);
+}
+
+/* ── score header ───────────────────────────────────────────────────────*/
+.score-header { display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
+.gauge { position: relative; width: 132px; height: 132px; flex: none; }
+.gauge-value {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.gauge-number { font-size: 38px; font-weight: var(--w-medium); letter-spacing: var(--tracking-tighter); line-height: 1; }
+.gauge-denominator { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+.verdict { min-width: 210px; flex: 1; }
+.verdict-band { display: flex; align-items: center; gap: 7px; font-weight: var(--w-medium); font-size: 15px; }
+.verdict-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.verdict-advice { margin-top: 7px; color: var(--ink-2); font-size: 12px; max-width: 56ch; }
+.verdict-note { margin-top: 5px; color: var(--muted); font-size: 11px; line-height: 1.6; max-width: 56ch; }
+.verdict-scale { display: flex; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 10px; color: var(--muted); }
+.verdict-scale li { display: flex; align-items: center; gap: 4px; }
+.verdict-scale i { width: 8px; height: 8px; border-radius: 2px; }
+
+/* ── category bars ──────────────────────────────────────────────────────*/
+.category-bars {
+  padding-top: 16px; border-top: 1px solid var(--line);
+  display: grid; gap: 12px;
+}
+.category { display: grid; grid-template-columns: 132px 1fr 52px; gap: 12px; align-items: center; }
+@media (max-width: 520px) { .category { grid-template-columns: 104px 1fr 52px; } }
+.category-label { font-size: 12px; color: var(--ink-2); }
+.category-track { height: 6px; background: var(--track); border-radius: var(--r-round); overflow: hidden; }
+/* `scaleX` and not `width`. The score recalculates on every keystroke, and a width is a
+   layout property: each change would measure the page again. A transform is composited
+   and costs nothing while you type. */
+.category-fill {
+  display: block; height: 100%; width: 100%; background: var(--ink); border-radius: var(--r-round);
+  transform-origin: left center;
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.category-value { font-size: 11.5px; color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; }
+.category-off .category-label, .category-off .category-value { color: var(--muted); }
+
+/* ── groups and checks ──────────────────────────────────────────────────*/
+.group { margin-top: 22px; }
+.group + .group { padding-top: 18px; border-top: 1px solid var(--line); }
+.group h3 { font-size: 12.5px; color: var(--ink); margin-bottom: 3px; }
+
+.check-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.check {
+  display: grid; grid-template-columns: 18px 1fr auto; gap: 10px;
+  padding: 11px 0; border-bottom: 1px solid var(--line); align-items: start;
+}
+.check:last-child { border-bottom: 0; }
+.check-icon { font-size: 13px; line-height: 1.35; font-weight: var(--w-bold); }
+.check-pass { color: var(--good); }
+.check-partial { color: var(--warning); }
+.check-fail { color: var(--critical); }
+.check-body { display: block; }
+.check-label { display: block; font-size: 12.5px; }
+.check-detail { display: block; font-size: 11.5px; color: var(--ink-2); margin-top: 3px; }
+.check-fix {
+  display: block; font-size: 11.5px; color: var(--ink-2); margin-top: 8px;
+  padding: 9px 11px; background: var(--page);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+}
+.check-points { font-size: 11px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ── priority fixes ─────────────────────────────────────────────────────*/
+.todo { counter-reset: fix; list-style: none; display: grid; gap: 8px; margin: 10px 0 0; padding: 0; }
+.todo li {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start;
+  padding: 13px 14px; background: var(--page); border: 1px solid var(--line); border-radius: var(--r-lg);
+  transition: border-color var(--dur-base) var(--ease-swift);
+}
+.todo li:hover { border-color: var(--line-strong); }
+.todo li::before {
+  counter-increment: fix; content: counter(fix);
+  width: 20px; height: 20px; border-radius: var(--r-round);
+  background: var(--inverse); color: var(--on-inverse); font-size: 11px; font-weight: var(--w-medium);
+  display: grid; place-items: center; margin-top: 1px; font-variant-numeric: tabular-nums;
+}
+.todo-body { display: grid; gap: 3px; }
+.todo-body b { font-weight: var(--w-medium); }
+.todo-body span { color: var(--ink-2); font-size: 11.5px; }
+.todo-gain { font-size: 11px; font-weight: var(--w-medium); color: var(--good); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ── keywords ───────────────────────────────────────────────────────────*/
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-size: 11px; padding: 4px 10px; border-radius: var(--r-round);
+  border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-swift),
+    background-color var(--dur-base) var(--ease-swift),
+    opacity var(--dur-base) var(--ease-swift);
+}
+.chip-yes { background: var(--chip-yes); }
+.chip-no { background: var(--chip-no); }
+.chip-muted { opacity: 0.4; text-decoration: line-through; }
+/* The sample buttons use the keyword chip style, without the status colour. */
+.chip-clear { color: var(--ink-2); }
+.chip:hover { border-color: var(--line-strong); }
+.chip:active { transform: scale(0.96); transition-duration: var(--dur-recoil); }
+/* A chip carries a keyword and there can be thirty of them. Nothing moves on hover: at
+   that count a lift under the pointer is noise, and the border already answers. */
+@media (hover: hover) and (pointer: fine) {
+  .chip:hover { background-color: var(--surface-hover); }
+}
+.legend, .muted-text { font-size: 11px; color: var(--muted); line-height: 1.6; }
+
+.empty-state { color: var(--muted); text-align: center; padding: 52px 16px; font-size: 12.5px; }
+.footnote {
+  font-size: 11px; color: var(--muted); margin-top: 20px;
+  border-top: 1px solid var(--line); padding-top: 14px; line-height: 1.6;
+}
+
+/* ── "How this is scored" ───────────────────────────────────────────────
+   Base UI drives the open and close with data-[open]/data-[starting-style]/
+   data-[ending-style], so both directions can be eased rather than only the
+   entrance. Backdrop fades, panel lifts and settles on the expo curve.
+
+   The trigger sits at the foot of the score tab. It was in the top bar, one corner away
+   from the number it explains, which put the rules of the score in the place a product
+   usually puts its name. */
+.side-foot { margin-top: auto; padding-top: 18px; }
+.how-trigger {
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+  color: var(--ink-2); font-size: 11.5px;
+  border-bottom: 1px solid var(--line-strong);
+  transition: color var(--dur-base) var(--ease-swift),
+    border-color var(--dur-base) var(--ease-swift);
+}
+.how-trigger:hover { color: var(--ink); border-color: var(--ink); }
+
+.how-backdrop {
+  position: fixed; inset: 0; z-index: var(--z-modal);
+  background: rgba(26, 25, 29, 0.32);
+  backdrop-filter: blur(3px);
+  transition: opacity var(--dur-slow) var(--ease-swift);
+}
+.how-backdrop[data-starting-style], .how-backdrop[data-ending-style] { opacity: 0; }
+
+.how-popup {
+  position: fixed; z-index: calc(var(--z-modal) + 1);
+  top: 50%; left: 50%;
+  width: min(680px, calc(100vw - 32px));
+  max-height: min(78vh, 720px);
+  display: flex; flex-direction: column;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--r-xl);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  transform: translate(-50%, -50%);
+  transition: opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+.how-popup[data-starting-style], .how-popup[data-ending-style] {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% + 10px)) scale(0.98);
+}
+
+.how-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 18px 20px; border-bottom: 1px solid var(--line); flex: none;
+}
+.how-title { font-size: 15px; font-weight: var(--w-medium); letter-spacing: var(--tracking-tight); }
+.how-close {
+  width: 28px; height: 28px; flex: none; display: grid; place-items: center;
+  background: transparent; border: 1px solid var(--line); border-radius: var(--r-round);
+  color: var(--ink-2); cursor: pointer;
+  transition: background-color var(--dur-base) var(--ease-swift), color var(--dur-base) var(--ease-swift);
+}
+.how-close:hover { background: var(--surface-hover); color: var(--ink); }
+.how-close:active { transform: scale(0.96); transition-duration: var(--dur-recoil); }
+
+.how-body { padding: 18px 20px 24px; overflow-y: auto; font-size: 12px; line-height: 1.65; }
+.how-lede { color: var(--ink-2); margin-bottom: 4px; }
+.how-body h3 {
+  font-size: 12.5px; font-weight: var(--w-medium); color: var(--ink);
+  margin: 20px 0 5px; padding-top: 14px; border-top: 1px solid var(--line);
+}
+.how-body p { color: var(--ink-2); margin-bottom: 6px; }
+.how-body ul { margin: 6px 0 8px; padding-left: 17px; display: grid; gap: 5px; color: var(--ink-2); }
+.how-body b { color: var(--ink); font-weight: var(--w-medium); }
+.how-note {
+  margin-top: 8px; padding: 10px 12px; font-size: 11.5px;
+  background: var(--page); border: 1px solid var(--line); border-radius: var(--r-md);
+}
+
 .details-popup { width: min(760px, calc(100vw - 32px)); max-height: min(82vh, 780px); }
 .details-body .segmented { margin-bottom: 16px; }
 
-/* ── paper tokens ───────────────────────────────────────────────────────
-   The sheet keeps its own colours. A CV is printed on white and read on
-   white, thus the preview does not follow the dark theme. The surface around
-   it does, so the app still has one appearance. */
-:root {
-  --paper: #ffffff;
-  --paper-ink: #111111;
-  --paper-ink-2: #444444;
-  --paper-faint: #9a9a9a;
-  --paper-line: #e2e2e2;
-  --edit-hover: rgba(17, 17, 17, 0.04);
-  --edit-focus: rgba(17, 17, 17, 0.05);
-  --edit-ring: rgba(17, 17, 17, 0.18);
+/* ── focus ──────────────────────────────────────────────────────────────
+   Base UI does not give a focus ring. Without these rules the browser shows its
+   own, which is blue, and this interface has no blue. Each control gets one
+   visible ring in the ink colour.
+
+   These selectors were previously joined to the rule below them by a missing
+   brace, so every control in the app had no ring at all. */
+.button:focus-visible,
+.segment:focus-visible,
+.chip:focus-visible,
+.cv-add:focus-visible,
+.pager-arrow:focus-visible,
+.how-close:focus-visible,
+.how-trigger:focus-visible,
+.menu-item:focus-visible,
+.footer-link:focus-visible,
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--ink); outline-offset: 2px; border-radius: var(--r-sm);
+}
+.url-input:focus-visible,
+.side-textarea:focus-visible {
+  outline: 2px solid var(--ink); outline-offset: 1px; border-color: transparent;
+}
+.cv-tools button:focus-visible, .cv-tools-entry:focus-visible {
+  outline: 2px solid var(--paper-ink); outline-offset: 1px;
+}
+
+/* ── theme toggle ───────────────────────────────────────────────────────*/
+.theme-toggle {
+  width: 32px; height: 32px; flex: none; display: grid; place-items: center;
+  background: transparent; border: 1px solid var(--line); border-radius: var(--r-md);
+  color: var(--ink-2); cursor: pointer;
+  transition: background-color var(--dur-base) var(--ease-swift), color var(--dur-base) var(--ease-swift);
+}
+.theme-toggle:hover { background: var(--surface-hover); color: var(--ink); }
+.theme-toggle:active { transform: scale(0.96); transition-duration: var(--dur-recoil); }
+.theme-toggle svg > g { transition: opacity var(--dur-base) var(--ease-swift), transform var(--dur-slow) var(--ease-out); }
+
+/* Motion is decoration here, never information. Switching it off loses nothing.
+
+   Gentler, not absent. Movement goes: nothing slides, lifts or scales. A change of
+   colour or of opacity stays, and stays quick, because it is the thing that reports
+   that a control received your press. Removing that too would make the interface feel
+   broken rather than calm. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-property: opacity, color, background-color, border-color !important;
+    transition-duration: var(--dur-fast) !important;
+  }
+  .cv-flow, .category-fill { transition: none !important; }
+  .button:active, .chip:active, .segment:active, .cv-add:active,
+  .cv-tool:active, .pager-arrow:active, .theme-toggle:active, .how-close:active {
+    transform: none !important;
+  }
 }

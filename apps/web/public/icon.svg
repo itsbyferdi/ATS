@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    The mark is a filled circle and nothing else.
+
+    It carries the same value as the logo in the top bar: `--inverse`, the token for the
+    opposite of the page. Near-black on the light canvas, near-white on the dark one. The
+    two are written out here because a file loaded as an icon has no access to the
+    stylesheet of the page.
+  -->
+  <style>
+    circle { fill: #1a191d; }
+    @media (prefers-color-scheme: dark) { circle { fill: #f8f8f7; } }
+  </style>
+  <circle cx="16" cy="16" r="16" />
+</svg>

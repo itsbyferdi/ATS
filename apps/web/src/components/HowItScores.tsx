@@ -82,7 +82,7 @@ export function HowItScores() {
               advert.
             </p>
 
-            <h3 className="how-warn">What this score is not</h3>
+            <h3>What this score is not</h3>
             <ul>
               <li>
                 <b>No hiring system gives a score from 100.</b> Greenhouse puts people into five groups. Workday
