@@ -372,31 +372,30 @@ type-checked, and 500s return a generic message while the detail goes to the ser
 
 ## Design
 
-Tokens, type scale and motion curves were read off [rows.gg](https://rows.gg) with
-Playwright rather than eyeballed: warm off-white canvas, near-black ink, borders instead
-of shadows, and a 90ms press recoil.
+A warm off-white canvas rather than white, near-black ink rather than black, borders
+instead of shadows, one accent, and a 90ms press recoil.
 
-Their type is small and this follows it: 13px base, 12px body copy, 11px for supporting
-text and 14–15px section headings. Four controls need correct keyboard operation: the
-side panel tabs, the tabs inside the breakdown, the download menu and the two dialogs.
-They use [Base UI](https://base-ui.com). Thus the arrow keys move between the items, and
-only the selected item is in the tab order.
+The type is small: 13px base, 12px body copy, 11px for supporting text and 14–15px
+section headings. Four controls need correct keyboard operation: the side panel tabs, the
+tabs inside the breakdown, the download menu and the two dialogs. They are built on Base
+UI, thus the arrow keys move between the items and only the selected item is in the tab
+order.
 
-Motion follows the design-engineering rules from [UI Skills](https://www.ui-skills.com),
-and the stylesheet cites them where it departs. In short: CSS transitions rather than keyframes for anything interactive, so a
-change can be interrupted halfway; `transform` and `opacity` only, never a layout
-property; `ease-out` in both directions, because `ease-in` holds back the moment a person
-is watching; nothing over 300ms, and 90–130ms for feedback on a press. A theme change
-turns every transition off for one frame so the tokens snap instead of smearing, with the
-rows.gg wash over the top. Deleting a part of the document has no animation at all: the
-one thing you want from a delete is proof that the thing has gone.
+Motion has a short set of rules, and the stylesheet gives the reason wherever it departs
+from them. CSS transitions rather than keyframes for anything interactive, so a change
+can be interrupted halfway. `transform` and `opacity` only, never a layout property.
+`ease-out` in both directions, because `ease-in` holds back the moment a person is
+watching. Nothing over 300ms, and 90–130ms for feedback on a press. A theme change turns
+every transition off for one frame so the tokens snap instead of smearing, with a wash
+over the top. Deleting a part of the document has no animation at all: the one thing you
+want from a delete is proof that the thing has gone.
 
-Two deliberate departures. Their greys and status colours sit between 2.6:1 and 4.3:1 at
-the sizes that this app uses. Thus each colour is one step darker and gives more than
-4.5:1. The hues and the order stay the same. Both themes pass at each size. Colour is
-never the only source of meaning: each status has an icon and a word, each focus ring
-uses the ink colour and not the blue of the browser, and `prefers-reduced-motion` stops
-all animation.
+Contrast is checked rather than assumed. The greys and status colours started between
+2.6:1 and 4.3:1 at the sizes this app uses, so each is one step darker and now gives more
+than 4.5:1. The hues and the order stay the same, and both themes pass at each size.
+Colour is never the only source of meaning: each status has an icon and a word, each
+focus ring uses the ink colour and not the blue of the browser, and
+`prefers-reduced-motion` stops all animation.
 
 </details>
 

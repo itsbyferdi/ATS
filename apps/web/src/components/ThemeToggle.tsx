@@ -1,7 +1,7 @@
 /**
- * The sun and the moon use one box of 16px. They fade and turn a small quantity, with
- * the curve from rows.gg. The icon shows the theme that you get. The label gives the
- * same data. The picture is never the only source of the meaning.
+ * The sun and the moon use one box of 16px. They fade and turn a small quantity. The
+ * icon shows the theme that you get. The label gives the same data. The picture is
+ * never the only source of the meaning.
  */
 export function ThemeToggle({ isDark, onToggle }: { isDark: boolean; onToggle: () => void }) {
   return (

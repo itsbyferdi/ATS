@@ -1,10 +1,9 @@
 /**
  * Brand marks, inlined.
  *
- * shadcn/ui uses Lucide for interface icons, but Lucide dropped its brand set, so
- * shadcn defines these inline in its own icons file. Same approach here: the official
- * Simple Icons paths, drawn as fills rather than strokes because that is how brand marks
- * are built. `currentColor` keeps them on the same ink as the text beside them.
+ * An interface icon set rarely carries brand logos, so these two are defined here
+ * instead. They are drawn as fills rather than strokes, because that is how a brand mark
+ * is built. `currentColor` keeps them on the same ink as the text beside them.
  */
 export function GithubIcon({ size = 14 }: { size?: number }) {
   return (

@@ -14,9 +14,9 @@ const prefersDark = () => window.matchMedia('(prefers-color-scheme: dark)').matc
  * transition off for one frame, changes the tokens, and turns the transitions back on.
  * The colour then snaps.
  *
- * `flashing` drives the wash from rows.gg over the top of that snap. The wash is what
- * makes the change read as one event. The two work together: the snap removes the
- * smear, the wash gives the change a shape.
+ * `flashing` drives a wash over the top of that snap. The wash is what makes the change
+ * read as one event. The two work together: the snap removes the smear, the wash gives
+ * the change a shape.
  */
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>('system');
