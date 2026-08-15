@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { renderCvText, scoreResume, starterDoc, type CvDoc } from '@ats/core';
+import { renderCvText, repairIds, scoreResume, starterDoc, type CvDoc } from '@ats/core';
 
 import { CvEditor } from './components/CvEditor.js';
-import { HowItScores } from './components/HowItScores.js';
+import { DownloadMenu } from './components/DownloadMenu.js';
 import { GithubIcon, LinkedinIcon } from './components/Icons.js';
+import { Paper } from './components/Paper.js';
 import { ScorePanel } from './components/ScorePanel.js';
 import { ThemeToggle } from './components/ThemeToggle.js';
-import { exportDocx, exportMarkdown, exportPdf, exportText } from './lib/exporters.js';
 import { useTheme } from './lib/useTheme.js';
 
 const STORE_KEY = 'ats-cv-scoring:doc';
@@ -17,12 +17,19 @@ function loadDoc(): CvDoc {
     const raw = window.localStorage.getItem(STORE_KEY);
     if (!raw) return starterDoc();
     const parsed = JSON.parse(raw) as CvDoc;
-    if (parsed && Array.isArray(parsed.sections)) return parsed;
+    // A document written before ids became random can hold the same id twice, and two
+    // parts with one id change together. Repair it on the way in.
+    if (parsed && Array.isArray(parsed.sections) && Array.isArray(parsed.contact)) {
+      return repairIds(parsed);
+    }
   } catch {
     /* A damaged record must not stop the editor. Start a new document instead. */
   }
   return starterDoc();
 }
+
+/** The example text, as the scorer sees it. Ids differ every call; the text does not. */
+const EXAMPLE_TEXT = renderCvText(starterDoc());
 
 export default function App() {
   const { isDark, toggle, flashing } = useTheme();
@@ -56,16 +63,18 @@ export default function App() {
     setMuted((prev) => (prev.includes(term) ? prev.filter((t) => t !== term) : [...prev, term]));
   }, []);
 
-  const run = async (name: string, fn: () => void | Promise<void>) => {
+  const run = useCallback((name: string, fn: () => void | Promise<void>) => {
     setBusy(name);
-    try {
-      await fn();
-    } catch (err) {
-      alert(`The program could not make the file. ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setBusy(null);
-    }
-  };
+    void (async () => {
+      try {
+        await fn();
+      } catch (err) {
+        alert(`The program could not make the file. ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        setBusy(null);
+      }
+    })();
+  }, []);
 
   const startAgain = () => {
     if (!window.confirm('This removes your CV from this browser and starts a new one. Continue?')) return;
@@ -79,20 +88,11 @@ export default function App() {
       {flashing && <div className="theme-flash" aria-hidden />}
 
       <header className="topbar">
-        <HowItScores />
+        {/* The mark, and nothing else. The rubric moved into the score panel, where the
+            number it explains is. */}
+        <div className="logo" role="img" aria-label="ATS CV Scoring" />
         <div className="topbar-actions">
-          <button type="button" className="button" disabled={busy !== null} onClick={() => run('docx', () => exportDocx(doc))}>
-            {busy === 'docx' ? 'Building…' : 'Download DOCX'}
-          </button>
-          <button type="button" className="button button-ghost" disabled={busy !== null} onClick={() => run('pdf', () => exportPdf(doc))}>
-            PDF
-          </button>
-          <button type="button" className="button button-ghost" disabled={busy !== null} onClick={() => run('md', () => exportMarkdown(doc))}>
-            Markdown
-          </button>
-          <button type="button" className="button button-ghost" disabled={busy !== null} onClick={() => run('txt', () => exportText(doc))}>
-            Text
-          </button>
+          <DownloadMenu doc={doc} busy={busy} onRun={run} />
           <button type="button" className="button button-quiet" onClick={startAgain}>
             Start again
           </button>
@@ -101,12 +101,9 @@ export default function App() {
       </header>
 
       <main className="workspace">
-        <div className="canvas">
+        <Paper>
           <CvEditor doc={doc} onChange={setDoc} />
-          <p className="canvas-note">
-            Click any line to change it. This CV stays in this browser. Send the DOCX file to application forms.
-          </p>
-        </div>
+        </Paper>
 
         <ScorePanel
           jobDescription={jobDescription}
@@ -115,11 +112,12 @@ export default function App() {
           checked={checked}
           onCheck={() => setChecked(true)}
           onToggleKeyword={toggleKeyword}
+          isExample={text === EXAMPLE_TEXT}
         />
       </main>
 
       <footer className="site-footer">
-        <p className="footer-copy">© 2026</p>
+        <p className="footer-copy">Made by Ferdi © 2026</p>
         <div className="footer-links">
           <a className="footer-link" href="https://github.com/itsbyferdi" target="_blank" rel="noopener noreferrer">
             <GithubIcon /> Github

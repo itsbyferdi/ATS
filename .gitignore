@@ -146,3 +146,8 @@ vite.config.ts.timestamp-*
 dist/
 dist-types/
 *.tsbuildinfo
+
+# Agent instructions and skills. Local working aids, not part of the product.
+.agents/
+.claude/
+AGENTS.md

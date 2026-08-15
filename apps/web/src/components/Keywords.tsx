@@ -27,8 +27,10 @@ export function Keywords({ keywords, hasJobDescription, outOf, onToggle }: Props
       <section className="group">
         <h3>Keywords from the posting</h3>
         <p className="muted-text">
-          There is no job advert, thus Job Match does not apply. Your score comes from {outOf} points. Add an
-          advert to get the other 25 points.
+          There is no job advert, thus Job Match does not apply. The four groups that do apply carry {outOf}{' '}
+          points between them, and your score is that result as a percentage. Add an advert and the score
+          includes the 25 points of Job Match. A score with an advert and a score without one measure
+          different things: do not compare them.
         </p>
       </section>
     );

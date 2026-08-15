@@ -57,11 +57,79 @@ export interface CvDoc {
 }
 
 /**
- * Ids only have to be unique inside one document. They are the React keys, and they keep
- * the caret in place when a list changes above the field you are typing in.
+ * Ids are the React keys, and every change to the document finds its target by id. Thus
+ * two parts with one id are two parts that change together.
+ *
+ * They must be unique inside one document, and a document outlives the program that made
+ * it: it is written to the local store and read back on the next visit. An id from a
+ * counter cannot do this. The counter restarts at zero when the page loads, while the
+ * document keeps the ids it already has, thus the next part added takes an id that the
+ * document is already using. Editing either one then edited both.
+ *
+ * Randomness has no such state to lose. `crypto` gives it. The fall-back is for a runtime
+ * with no `crypto` on the global object, which means Node before 19; `getRandomValues`
+ * itself needs no secure context, thus a page served over plain http still takes the
+ * first branch.
  */
-let counter = 0;
-export const newId = (prefix = 'id'): string => `${prefix}-${(counter += 1)}-${Math.floor(counter * 7919) % 100000}`;
+function randomPart(): string {
+  const source = globalThis.crypto;
+  if (source?.getRandomValues) {
+    const bytes = new Uint8Array(6);
+    source.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  return Math.random().toString(16).slice(2, 14).padEnd(12, '0');
+}
+
+export const newId = (prefix = 'id'): string => `${prefix}-${randomPart()}`;
+
+/**
+ * Gives a fresh id to any part that shares one with a part before it.
+ *
+ * Documents written before the change above can already hold a repeated id. Reading one
+ * back would restore the fault, and nothing in the editor would repair it, so the repair
+ * happens once when the document is read. The first part to use an id keeps it, thus the
+ * part you can see at the top of the CV never moves.
+ *
+ * Only ids change. No word of the document is touched.
+ */
+export function repairIds(doc: CvDoc): CvDoc {
+  const seen = new Set<string>();
+  let changed = false;
+
+  const keep = <T extends { id: string }>(item: T): T => {
+    if (item.id && !seen.has(item.id)) {
+      seen.add(item.id);
+      return item;
+    }
+    const id = newId(item.id?.split('-')[0] || 'id');
+    seen.add(id);
+    changed = true;
+    return { ...item, id };
+  };
+
+  // A document read back from the local store is data from outside the program, and it
+  // can be any shape. A missing list here would throw, and the caller reads the document
+  // inside a `try`, thus the throw would be caught and the person's CV quietly replaced
+  // by the example one. A missing list is treated as an empty list instead.
+  const list = <T>(value: T[] | undefined): T[] => (Array.isArray(value) ? value : []);
+
+  const contact = list(doc.contact).map(keep);
+  const sections = list(doc.sections).map((section) => {
+    const next = keep(section);
+    return { ...next, rows: list(next.rows).map(keep), entries: list(next.entries).map(keep) };
+  });
+
+  // A document with no repeated id and no missing list is returned as it arrived, so a
+  // load does not look like an edit.
+  const reshaped =
+    contact.length !== doc.contact?.length ||
+    sections.length !== doc.sections?.length ||
+    sections.some((s, i) => s.rows.length !== doc.sections[i]?.rows?.length ||
+      s.entries.length !== doc.sections[i]?.entries?.length);
+
+  return changed || reshaped ? { ...doc, contact, sections } : doc;
+}
 
 export const emptyEntry = (): CvEntry => ({
   id: newId('entry'),

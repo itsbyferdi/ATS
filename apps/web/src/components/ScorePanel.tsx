@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { SAMPLE_JOBS, type ScoreReport } from '@ats/core';
+import { Tabs } from '@base-ui-components/react/tabs';
+import type { ScoreReport } from '@ats/core';
 
 import { CategoryBars } from './CategoryBars.js';
+import { HowItScores } from './HowItScores.js';
+import { JobAdvert } from './JobAdvert.js';
 import { ScoreDetails } from './ScoreDetails.js';
 
 interface Props {
@@ -12,12 +15,17 @@ interface Props {
   checked: boolean;
   onCheck: () => void;
   onToggleKeyword: (term: string) => void;
+  /** True while the document is still the example text that the editor starts with. */
+  isExample: boolean;
 }
 
 /**
- * The panel beside the document: the advert, the control that asks for a score, and the
- * result in short. The full breakdown opens over the top, because it is long and it is
- * something you read once and then act on.
+ * The panel beside the document. Two tabs, and each tab does one job: the score, or the
+ * advert that the score is measured against.
+ *
+ * Before this there was one column with the advert on top and the score below it, and a
+ * person looking for their score read an advert form first. The full breakdown still
+ * opens over the page, because it is long and you read it once and then act on it.
  */
 export function ScorePanel({
   jobDescription,
@@ -26,123 +34,96 @@ export function ScorePanel({
   checked,
   onCheck,
   onToggleKeyword,
+  isExample,
 }: Props) {
-  const [url, setUrl] = useState('');
-  const [fetching, setFetching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-
-  const importUrl = async () => {
-    if (!url.trim()) return;
-    setFetching(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/job', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-        signal: AbortSignal.timeout(25_000),
-      });
-      const body = await res.json().catch(() => null);
-      if (!res.ok || !body?.text) {
-        setError(body?.error ?? 'The tool could not read that link. Copy the advert and put it below.');
-        return;
-      }
-      onJobDescription(body.text);
-      setUrl('');
-    } catch {
-      setError('The link reader does not operate. Start it with "npm run dev:api", or put the advert below.');
-    } finally {
-      setFetching(false);
-    }
-  };
+  const [tab, setTab] = useState('score');
+  const hasAdvert = jobDescription.trim().length > 0;
 
   return (
-    <aside className="side" aria-label="Score">
-      <section className="side-block">
-        <h2 className="side-title">The job advert</h2>
+    <aside className="side" aria-label="Score and job advert">
+      <Tabs.Root className="side-tabs" value={tab} onValueChange={(v) => setTab(v as string)}>
+        <Tabs.List className="segmented" aria-label="Score and job advert">
+          <Tabs.Tab value="score" className="segment">ATS score</Tabs.Tab>
+          <Tabs.Tab value="advert" className="segment">
+            Job description
+            {hasAdvert && <span className="segment-dot" aria-label="added" />}
+          </Tabs.Tab>
+        </Tabs.List>
 
-        <div className="url-row">
-          <label className="visually-hidden" htmlFor="jd-url">Link to the advert</label>
-          <input
-            id="jd-url"
-            type="url"
-            className="url-input"
-            placeholder="Paste a link"
-            value={url}
-            disabled={fetching}
-            onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                void importUrl();
-              }
-            }}
-          />
-          <button
-            type="button"
-            className="button button-ghost"
-            disabled={fetching || !url.trim()}
-            onClick={() => void importUrl()}
-          >
-            {fetching ? 'Reading…' : 'Read'}
-          </button>
-        </div>
-        {error && <p className="url-error">{error}</p>}
+        <Tabs.Panel value="score" className="side-panel">
+          <div className="side-block">
+            {isExample && (
+              <p className="side-alert">
+                This is still the example CV that the editor starts with. A score on it describes the example,
+                not you. Replace the text first.
+              </p>
+            )}
 
-        <label className="visually-hidden" htmlFor="jd-text">The text of the advert</label>
-        <textarea
-          id="jd-text"
-          className="side-textarea"
-          value={jobDescription}
-          placeholder="…or paste the text of the advert here"
-          onChange={(e) => onJobDescription(e.target.value)}
-        />
+            {/* Once the score is on, the button has done its job and goes. Leaving a
+                solid primary control at the top of the panel would put the loudest thing
+                on the screen on an action that no longer does anything. */}
+            {!checked || !report ? (
+              <>
+                <button type="button" className="button check-button" onClick={onCheck}>
+                  Check the ATS score
+                </button>
+                <p className="legend">
+                  The score covers the format, the structure and the words. It uses the advert, if you give
+                  one, for the keywords and the job title. Once it is on it stays current: the number follows
+                  the document as you write, and you do not press this again.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="score-summary">
+                  <span className={`score-figure score-${report.band.key}`}>{report.score}</span>
+                  <span className="score-of">of 100</span>
+                  <span className="score-band">{report.band.label}</span>
+                </div>
+                <p className="legend">{report.band.advice}</p>
 
-        <p className="legend" style={{ marginBottom: 6 }}>Or use a sample:</p>
-        <div className="chips">
-          {SAMPLE_JOBS.map((s) => (
-            <button key={s.id} type="button" className="chip" onClick={() => onJobDescription(s.text)}>
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </section>
+                <CategoryBars categories={report.categories} />
 
-      <section className="side-block">
-        <button type="button" className="button check-button" onClick={onCheck}>
-          Check the ATS score
-        </button>
+                <div className="side-split">
+                  {!report.hasJobDescription && (
+                    <p className="side-note">
+                      There is no advert, so Job Match cannot be measured. This 100 is the other four groups,
+                      which carry {report.max} points between them, turned into a percentage. Add an advert on
+                      the next tab and the number moves, because it then has Job Match in it. The two numbers
+                      are not comparable.
+                    </p>
+                  )}
+                  <p className="side-note">The number follows the document. It changes as you write.</p>
+                </div>
 
-        {!checked || !report ? (
-          <p className="legend" style={{ marginTop: 10 }}>
-            The score covers the format, the structure and the words. Add the advert first to also get a score
-            for the keywords and the job title.
-          </p>
-        ) : (
-          <>
-            <div className="score-summary">
-              <span className={`score-figure score-${report.band.key}`}>{report.score}</span>
-              <span className="score-of">of 100</span>
-              <span className="score-band">{report.band.label}</span>
-            </div>
-            <p className="legend" style={{ marginTop: 0 }}>{report.band.advice}</p>
+                <button type="button" className="button button-ghost side-button" onClick={() => setOpen(true)}>
+                  See every check
+                </button>
 
-            <CategoryBars categories={report.categories} />
+                <ScoreDetails
+                  open={open}
+                  onOpenChange={setOpen}
+                  report={report}
+                  onToggleKeyword={onToggleKeyword}
+                />
+              </>
+            )}
+          </div>
 
-            <button type="button" className="button button-ghost details-button" onClick={() => setOpen(true)}>
-              View details
-            </button>
+          {/* Outside the two branches above, thus it is there before you ask for a score
+              as well as after. The rules are the thing a person wants to read when they
+              disagree with the number, and also the thing they want before they trust
+              one. It sits under the score because that is what it explains. */}
+          <div className="side-foot">
+            <HowItScores />
+          </div>
+        </Tabs.Panel>
 
-            <ScoreDetails
-              open={open}
-              onOpenChange={setOpen}
-              report={report}
-              onToggleKeyword={onToggleKeyword}
-            />
-          </>
-        )}
-      </section>
+        <Tabs.Panel value="advert" className="side-panel">
+          <JobAdvert value={jobDescription} onChange={onJobDescription} />
+        </Tabs.Panel>
+      </Tabs.Root>
     </aside>
   );
 }
