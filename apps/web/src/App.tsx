@@ -1,9 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { renderCvText, repairIds, scoreResume, starterDoc, type CvDoc } from '@ats/core';
+import {
+  figmaEvidence,
+  renderCvText,
+  repairIds,
+  scoreResume,
+  starterDoc,
+  type CvDoc,
+  type PastedClipboard,
+} from '@ats/core';
 
 import { CvEditor } from './components/CvEditor.js';
 import { DownloadMenu } from './components/DownloadMenu.js';
 import { GithubIcon, LinkedinIcon } from './components/Icons.js';
+import { ImportDialog } from './components/ImportDialog.js';
 import { Paper } from './components/Paper.js';
 import { ScorePanel } from './components/ScorePanel.js';
 import { ThemeToggle } from './components/ThemeToggle.js';
@@ -46,6 +55,11 @@ export default function App() {
   const [muted, setMuted] = useState<string[]>([]);
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  /** A paste that landed on the page. It opens the import panel with the text in it. */
+  const [pasted, setPasted] = useState<PastedClipboard | null>(null);
+  /** The CV as it was before the last import. An import replaces a person's work. */
+  const [beforeImport, setBeforeImport] = useState<CvDoc | null>(null);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -57,6 +71,37 @@ export default function App() {
     }, 400);
     return () => window.clearTimeout(id);
   }, [doc]);
+
+  /*
+   * A paste that lands on the page and not in a field.
+   *
+   * This is the way the CV usually arrives. The person lays it out in Figma, copies the
+   * text layers and presses paste on this page, where there is nothing to paste into.
+   * Without this listener that press does nothing at all, and the person has to find a
+   * button first to do the thing they have already asked for.
+   *
+   * A press inside a field is left alone: paste there means paste there. A paste of one
+   * short line is left alone as well, because it is not a CV, and taking the press would
+   * be the interface deciding it knows better.
+   */
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.isContentEditable || /^(input|textarea|select)$/i.test(target?.tagName ?? '')) return;
+
+      const text = event.clipboardData?.getData('text/plain') ?? '';
+      const html = event.clipboardData?.getData('text/html') ?? '';
+      const lines = text.split('\n').filter((line) => line.trim()).length;
+      if (!text.trim() || (lines < 4 && !figmaEvidence(html).length)) return;
+
+      event.preventDefault();
+      setPasted({ text, html: html || undefined });
+      setImporting(true);
+    };
+
+    document.addEventListener('paste', onPaste);
+    return () => document.removeEventListener('paste', onPaste);
+  }, []);
 
   const text = useMemo(() => renderCvText(doc), [doc]);
 
@@ -88,6 +133,13 @@ export default function App() {
     setDoc(starterDoc());
     setChecked(false);
     setMuted([]);
+    setBeforeImport(null);
+  };
+
+  /** An import replaces the whole document, thus the document it replaced is kept. */
+  const importDoc = (next: CvDoc) => {
+    setBeforeImport(doc);
+    setDoc(next);
   };
 
   return (
@@ -99,6 +151,27 @@ export default function App() {
             number it explains is. */}
         <div className="logo" role="img" aria-label="ATS CV Scoring" />
         <div className="topbar-actions">
+          {/* The way back from an import. It stays until it is used, because a person
+              finds out that an import was wrong by reading the sheet, and that takes
+              longer than any timer would allow. */}
+          {beforeImport && (
+            <button
+              type="button"
+              className="button button-quiet is-entering"
+              onClick={() => {
+                setDoc(beforeImport);
+                setBeforeImport(null);
+              }}
+            >
+              Undo import
+            </button>
+          )}
+          <ImportDialog
+            open={importing}
+            onOpenChange={setImporting}
+            incoming={pasted}
+            onImport={importDoc}
+          />
           <DownloadMenu doc={doc} busy={busy} onRun={run} />
           <button type="button" className="button button-quiet" onClick={startAgain}>
             Start again

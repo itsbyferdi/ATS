@@ -43,6 +43,33 @@ function findPhone(text: string): string | null {
   return hit ? hit.trim() : null;
 }
 
+/*
+ * The patterns above run over a whole CV and answer "where is the email address?". The
+ * importer asks a different question about one piece of a contact line: "what is this?".
+ * The non-global copies are for that question. A global pattern keeps its position
+ * between calls, thus the same string tests true and then false.
+ */
+const URL_ONE = new RegExp(URL_RE.source, 'i');
+const GITHUB_RE = /(?:https?:\/\/)?(?:www\.)?github\.com\/[\w\-./]{1,128}/i;
+
+/**
+ * What one piece of a contact line holds, or null if it holds nothing that can be
+ * labelled. The label is the word the editor prints in front of the value.
+ */
+export function contactLabel(value: string): string | null {
+  const v = value.trim();
+  if (!v || v.length > 120) return null;
+  if (EMAIL_RE.test(v)) return 'Email';
+  if (LINKEDIN_RE.test(v)) return 'LinkedIn';
+  if (GITHUB_RE.test(v)) return 'GitHub';
+  if (URL_ONE.test(v)) return 'Portfolio';
+  if (findPhone(v)) return 'Phone';
+  // A location is the one detail with no punctuation of its own to find it by, thus it
+  // is tested last and only against the whole piece.
+  if (LOCATION_RE.test(v) && v.replace(LOCATION_RE, '').trim().length === 0) return 'Location';
+  return null;
+}
+
 export function extractFields(text: string): ExtractedFields {
   const { raw, bullets } = splitLines(text);
   const head = raw.slice(0, 8).join(' ');
