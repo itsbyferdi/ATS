@@ -78,7 +78,8 @@ export function findDateRanges(text: string): DateRange[] {
   return out;
 }
 
-const BULLET_RE = /^\s*([•·▪●○◦*‣⁃−-]|\d+[.)])\s*/;
+/** The marker at the start of a list item, in every form a person writes it. */
+export const BULLET_RE = /^\s*([•·▪●○◦*‣⁃−-]|\d+[.)])\s*/;
 
 export interface Lines {
   /** The lines that have content. The function removes the spaces at the end. */

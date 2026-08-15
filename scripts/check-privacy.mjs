@@ -69,6 +69,21 @@ await step(async () => {
   await page.keyboard.type(`Marker ${MARKER}`);
 });
 await page.waitForTimeout(400);
+
+// The import panel reads the clipboard, which is the other way a whole CV enters this
+// program. The marker goes in with it, thus the check covers that path as well.
+await step(async () => {
+  await page.evaluate((marker) => {
+    const data = new DataTransfer();
+    data.setData('text/plain', `Marker ${marker}\nSenior Product Designer\n${marker}@example.com\n\nEXPERIENCE\nProduct Designer at ${marker}\nJanuary 2023 - Present\n- Led the work that carried ${marker} through to release.`);
+    data.setData('text/html', `<span data-buffer="<!--(figma)ZmlnLWtpd2k=(/figma)-->"></span><span>${marker}</span>`);
+    document.body.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+  }, MARKER);
+  await page.waitForTimeout(500);
+  await page.click('.import-foot .button:not(.button-ghost)');
+});
+await page.waitForTimeout(500);
+
 await step(() => page.click('.chip:has-text("Product design")'));
 await page.waitForTimeout(400);
 await step(() => page.click('.check-button'));

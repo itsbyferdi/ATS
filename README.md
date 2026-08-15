@@ -144,6 +144,27 @@ The editor shows one A4 page at a time, at the size the page prints. The arrows 
 the sheet move between the pages. Three pages is the limit, and the editor says so when
 your CV runs past it.
 
+**Import** at the top brings a CV in from the clipboard. This is for a CV that already
+exists somewhere else, and a CV laid out in Figma above all: select the text layers,
+copy them, and paste. You do not have to open the panel first — paste anywhere on the
+page and it opens with your text in it.
+
+A Figma frame is not a document. Copy it and the clipboard gives the words of each text
+layer with nothing to say which line was a heading, which was a job title and which was
+a date. The reader puts that structure back:
+
+- It states whether the paste came from Figma, and how it knows. Figma writes its own
+  payload beside the words, and the panel names the parts of it that arrived.
+- It lists what it made: the name, each contact detail, and every section with the
+  quantity of groups, entries and items in it.
+- It states what it had to guess, above the button that applies it. A heading that is
+  not written in capitals and is not a usual CV heading is read as ordinary text.
+- Nothing is dropped. Text that no rule can place goes into a section of its own with a
+  note that says where it came from.
+- **Undo import** appears in the top bar afterwards and stays there until you use it.
+
+The clipboard is read in your browser. Nothing about it is sent anywhere.
+
 **Download** at the top saves the file. The chevron opens the list:
 
 | File | Use it for |

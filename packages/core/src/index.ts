@@ -5,6 +5,7 @@ export * from './text.js';
 export * from './fields.js';
 export * from './score.js';
 export * from './cv.js';
+export * from './import.js';
 export { detectSplitWords } from './checks/parseSafety.js';
 export { extractJobKeywords, jobTitleFrom } from './checks/jobMatch.js';
 export { buildContext, makeCheck, type CheckContext } from './checks/context.js';
