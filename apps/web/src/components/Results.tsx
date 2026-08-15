@@ -25,12 +25,12 @@ interface Props {
 export function Results({ report, engines, enginesDisagree, onToggleKeyword }: Props) {
   const [view, setView] = useState<View>('score');
 
-  const tabs: { id: View; label: string; count?: number }[] = [
+  const tabs: { id: View; label: string }[] = [
     { id: 'score', label: 'Score' },
-    { id: 'fixes', label: 'Do these first', count: report.priorityFixes.length },
-    { id: 'keywords', label: 'Keywords', count: report.hasJobDescription ? report.keywords.length : undefined },
+    { id: 'fixes', label: 'Do these first' },
+    { id: 'keywords', label: 'Keywords' },
     { id: 'machine', label: 'What software sees' },
-    { id: 'checks', label: 'All checks', count: report.checks.length },
+    { id: 'checks', label: 'All checks' },
   ];
 
   /*
@@ -45,7 +45,6 @@ export function Results({ report, engines, enginesDisagree, onToggleKeyword }: P
         {tabs.map((t) => (
           <Tabs.Tab key={t.id} value={t.id} className="segment">
             {t.label}
-            {t.count !== undefined && ` · ${t.count}`}
           </Tabs.Tab>
         ))}
       </Tabs.List>
