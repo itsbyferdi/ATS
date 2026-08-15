@@ -249,22 +249,25 @@ export default function App() {
       )}
 
       <footer className="site-footer">
-        <a
-          className="footer-link"
-          href="https://github.com/itsbyferdi"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <GithubIcon /> Github
-        </a>
-        <a
-          className="footer-link"
-          href="https://www.linkedin.com/in/hafidhferdi/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <LinkedinIcon /> LinkedIn
-        </a>
+        <p className="footer-copy">© 2026</p>
+        <div className="footer-links">
+          <a
+            className="footer-link"
+            href="https://github.com/itsbyferdi"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <GithubIcon /> Github
+          </a>
+          <a
+            className="footer-link"
+            href="https://www.linkedin.com/in/hafidhferdi/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <LinkedinIcon /> LinkedIn
+          </a>
+        </div>
       </footer>
     </div>
   );
