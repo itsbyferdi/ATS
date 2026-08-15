@@ -132,10 +132,6 @@ export default function App() {
         <div className="panel">
           <div className="step-head">
             <h2>Start with your CV</h2>
-            <p>
-              Put in the exact file that you send to employers. This page reads it in the same way as the
-              software of an employer. Nothing leaves this page.
-            </p>
           </div>
           {parsing ? (
             <div className="card">
@@ -161,10 +157,6 @@ export default function App() {
         <div className="panel">
           <div className="step-head">
             <h2>Add the job posting</h2>
-            <p>
-              This step is optional. If you add the advert, you also get a score for the keywords and the job
-              title. If you do not add it, you get a score for the format and the structure, from 75 points.
-            </p>
           </div>
           <JobPanel value={jobDescription} onChange={setJobDescription} />
           <div className="button-row">

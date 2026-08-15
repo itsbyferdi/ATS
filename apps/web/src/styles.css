@@ -233,12 +233,16 @@ button { font: inherit; color: inherit; }
 .rail-num {
   width: 19px; height: 19px; flex: none; border-radius: var(--r-round);
   display: grid; place-items: center; font-size: 11px; font-variant-numeric: tabular-nums;
-  background: var(--track); color: var(--ink-2);
+  background: var(--track); color: var(--ink-2); box-sizing: border-box;
   transition: background-color var(--dur-base) var(--ease-standard), color var(--dur-base) var(--ease-standard);
 }
 .rail-step[aria-current='step'] .rail-num { background: var(--inverse); color: var(--on-inverse); }
-.rail-step-done .rail-num { background: var(--good); color: var(--page); }
+.rail-step-done .rail-num {
+  background: transparent; color: var(--ink);
+  border: 1px solid var(--line-strong);
+}
 .rail-line { flex: 1; height: 1px; background: var(--line); }
+.rail-num .tick, .stage-dot .tick { display: block; }
 
 /* ── panels ─────────────────────────────────────────────────────────────
    Each step comes on the screen with the motion from rows.gg. It moves a small
@@ -271,7 +275,7 @@ textarea {
   width: 100%; min-height: 148px; resize: vertical;
   background: var(--page); color: var(--ink);
   border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px;
-  font-family: var(--mono); font-size: 12px; line-height: 1.6;
+  font-family: var(--font); font-size: 12.5px; line-height: 1.6;
   transition: border-color var(--dur-fast) var(--ease-standard);
 }
 textarea:hover { border-color: var(--line-strong); }
@@ -324,9 +328,8 @@ textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; bor
   55% { opacity: 1; transform: scale(1.09); }
   100% { opacity: 1; transform: scale(1); }
 }
-@keyframes stagePulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 1; }
+@keyframes ringTurn {
+  to { transform: rotate(360deg); }
 }
 @keyframes sweep {
   0% { transform: translateX(-100%); }
@@ -344,12 +347,24 @@ textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; bor
 .stages { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .stage { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: center; font-size: 12px; }
 .stage-dot {
-  width: 16px; height: 16px; border-radius: var(--r-round);
-  display: grid; place-items: center; font-size: 10px; font-weight: var(--w-bold);
-  background: var(--track); color: var(--muted);
+  width: 16px; height: 16px; flex: none; box-sizing: border-box;
+  border-radius: var(--r-round);
+  display: grid; place-items: center;
+  background: none;
+  border: 1.5px dashed var(--line-strong);
+  color: var(--ink);
 }
-.stage-active .stage-dot { background: var(--inverse); color: var(--on-inverse); animation: stagePulse 1.2s var(--ease-standard) infinite; }
-.stage-done .stage-dot { background: var(--good); color: var(--page); animation: stageEnter var(--dur-expressive) var(--ease-spring) both; }
+/* Turning slowly and at a constant rate. An eased spin looks like it is stuttering. */
+.stage-active .stage-dot {
+  border-color: var(--ink);
+  animation: ringTurn 2.4s linear infinite;
+}
+/* Finished: the ring goes, the tick arrives on the spring curve. */
+.stage-done .stage-dot {
+  border-color: transparent;
+  color: var(--ink);
+  animation: stageEnter var(--dur-expressive) var(--ease-spring) both;
+}
 .stage-waiting { color: var(--muted); }
 .stage-active { color: var(--ink); }
 .stage-done { color: var(--ink-2); }
@@ -539,6 +554,7 @@ details summary:hover { color: var(--ink); }
 .raw-text {
   background: var(--page); border: 1px solid var(--line); border-radius: var(--r-md);
   padding: 13px; max-height: 300px; overflow: auto;
+  font-family: var(--font);
   font-size: 11px; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
   color: var(--ink-2); margin: 10px 0 0;
 }

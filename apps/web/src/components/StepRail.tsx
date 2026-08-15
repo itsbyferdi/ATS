@@ -37,7 +37,13 @@ export function StepRail({ current, hasResume, onGo }: Props) {
               onClick={() => reachable && onGo(s.id)}
             >
               <span className="rail-num" aria-hidden>
-                {done ? '✓' : i + 1}
+                {done ? (
+                  <svg className="tick" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+                    <path d="M1.5 5.2 3.9 7.6 8.5 2.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : (
+                  i + 1
+                )}
               </span>
               {s.label}
             </button>

@@ -34,7 +34,7 @@ export function ResumePanel({ value, status, onChange, onFile }: ResumePanelProp
         }}
       >
         <b>Drop your CV here</b>
-        <small>or click to browse · .pdf .docx .txt .md</small>
+        <small>Supports PDF, Markdown, TXT, and DOCX</small>
       </button>
 
       <input
