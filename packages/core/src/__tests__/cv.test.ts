@@ -1,12 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   emptyEntry,
   emptyRow,
   emptySection,
+  newId,
   renderCvHtml,
   renderCvMarkdown,
   renderCvText,
+  repairIds,
   scoreResume,
   starterDoc,
   type CvDoc,
@@ -144,6 +146,98 @@ describe('new parts', () => {
   it('gives each new part its own id', () => {
     const ids = [emptyEntry().id, emptyEntry().id, emptyRow().id, emptySection('rows').id];
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  /*
+   * The test above passes for an id that counts up, and a counting id was still wrong.
+   * A document is written to the local store and read back on the next visit, but the
+   * counter restarts at zero when the page loads. The next part added then took an id
+   * that the document already held, and because every change finds its target by id, one
+   * edit changed two parts. The tests below are the ones that fail on a counter.
+   */
+  it('does not repeat an id across many parts', () => {
+    const ids = Array.from({ length: 5000 }, () => newId('c'));
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  /*
+   * The real failure crossed a page load, so the test has to cross one. Resetting the
+   * module registry and importing again gives the module the fresh start that a reload
+   * gives it, while the document from the first session is still in hand. An id built
+   * from a counter reissues that document's ids here; a random one does not.
+   */
+  it('does not reissue the ids of a document made before the page reloaded', async () => {
+    const idsOf = (doc: CvDoc) => [
+      ...doc.contact.map((c) => c.id),
+      ...doc.sections.flatMap((s) => [s.id, ...s.rows.map((r) => r.id), ...s.entries.map((e) => e.id)]),
+    ];
+
+    // The first visit. A new document is made and written to the local store.
+    vi.resetModules();
+    const first = await import('../cv.js');
+    const saved = idsOf(first.starterDoc());
+
+    // The second visit. The module starts again from nothing, the document does not.
+    vi.resetModules();
+    const second = await import('../cv.js');
+    const afterReload = [
+      ...idsOf(second.starterDoc()),
+      second.newId('c'),
+      second.emptyRow().id,
+      second.emptyEntry().id,
+    ];
+
+    expect(afterReload.filter((id) => saved.includes(id))).toEqual([]);
+  });
+});
+
+describe('repairing a document that already holds a repeated id', () => {
+  const damaged = (): CvDoc => ({
+    name: 'A Name',
+    headline: 'A Title',
+    contact: [
+      { id: 'c-1-7919', label: 'Email', value: 'a@example.com' },
+      { id: 'c-1-7919', label: 'Phone', value: '+00 000' },
+      { id: 'c-2-15838', label: 'Location', value: 'A City' },
+    ],
+    sections: [
+      {
+        id: 'section-1-7919',
+        heading: 'Core skills',
+        kind: 'rows',
+        body: '',
+        rows: [
+          { id: 'row-1-7919', label: 'One', value: 'a, b' },
+          { id: 'row-1-7919', label: 'Two', value: 'c, d' },
+        ],
+        entries: [],
+      },
+    ],
+  });
+
+  it('gives every part its own id', () => {
+    const fixed = repairIds(damaged());
+    const ids = [
+      ...fixed.contact.map((c) => c.id),
+      ...fixed.sections.flatMap((s) => [s.id, ...s.rows.map((r) => r.id)]),
+    ];
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('changes no word of the document', () => {
+    expect(renderCvText(repairIds(damaged()))).toBe(renderCvText(damaged()));
+  });
+
+  it('leaves the first part of a pair with the id it had', () => {
+    const fixed = repairIds(damaged());
+    expect(fixed.contact[0].id).toBe('c-1-7919');
+    expect(fixed.contact[1].id).not.toBe('c-1-7919');
+    expect(fixed.sections[0].rows[0].id).toBe('row-1-7919');
+  });
+
+  it('returns a document with no repeated id exactly as it arrived', () => {
+    const clean = starterDoc();
+    expect(repairIds(clean)).toBe(clean);
   });
 
   it('starts a rows section with one row and an entries section with one entry', () => {

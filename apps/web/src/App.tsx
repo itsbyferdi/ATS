@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { renderCvText, scoreResume, starterDoc, type CvDoc } from '@ats/core';
+import { renderCvText, repairIds, scoreResume, starterDoc, type CvDoc } from '@ats/core';
 
 import { CvEditor } from './components/CvEditor.js';
 import { DownloadMenu } from './components/DownloadMenu.js';
@@ -17,7 +17,11 @@ function loadDoc(): CvDoc {
     const raw = window.localStorage.getItem(STORE_KEY);
     if (!raw) return starterDoc();
     const parsed = JSON.parse(raw) as CvDoc;
-    if (parsed && Array.isArray(parsed.sections)) return parsed;
+    // A document written before ids became random can hold the same id twice, and two
+    // parts with one id change together. Repair it on the way in.
+    if (parsed && Array.isArray(parsed.sections) && Array.isArray(parsed.contact)) {
+      return repairIds(parsed);
+    }
   } catch {
     /* A damaged record must not stop the editor. Start a new document instead. */
   }
