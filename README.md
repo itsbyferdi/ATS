@@ -1,15 +1,18 @@
 # ATS CV Scoring
 
-**Find out if hiring software can read your CV. Then make a version that it can read.**
+**Write your CV here, and see the score that hiring software gives it.**
 
 Most companies put your CV through software before a person sees it. The software must
 get your name, your email address, your job titles and your dates out of the file. If it
 cannot do this, your data goes into the incorrect field or into no field. Nobody tells
 you the reason.
 
-This tool shows you what that software gets. It gives your CV a score against an open
-list of checks, and it explains each point. It can also write your CV again in a clean
-form that you can download.
+A design tool makes this worse. It can export a PDF that shows the letters as drawings,
+with no text below them. The page looks correct and reads as nothing.
+
+This tool removes that risk. You write the CV here, in a document on the page. The file
+comes from the same data each time, thus it always has real text. The panel at the side
+gives the score and explains each point.
 
 ![The scanner scoring a CV](docs/screenshot.png)
 
@@ -24,15 +27,13 @@ analytics, and nothing is stored anywhere.
 
 This is the exact operation, because a statement about privacy is easy to make:
 
-- **The tool reads your CV in your browser.** It sends nothing to any other place. You
+- **You write the CV in your browser and it stays there.** The tool keeps it in the
+  local store of the browser, on this computer. It sends nothing to any other place. You
   can disconnect the internet and the tool operates.
-- **If you start the optional second reader**, the tool sends your CV to that reader.
-  The reader is a small program on *your own machine*. It listens on `127.0.0.1` and
-  refuses each connection from a different machine. It keeps the file in memory and
-  removes it when it sends the answer. This is a local transfer, not an upload, but it
-  is a transfer. Thus this document gives it.
+- **The score is calculated in the browser too.** No text goes to a server for it.
 - **Only one thing goes to the internet:** a link to a job advert. This occurs only when
   you put in a link and press the button. Your CV is not part of that request.
+- **To remove the CV**, press "Start again", or clear the site data of your browser.
 
 This is a test, not a statement. `scripts/check-privacy.mjs` operates the full tool in a
 browser. It puts a marker string in the CV, records each network request of the page, and
@@ -123,61 +124,44 @@ You will see something like:
 
 ## Using it
 
-The tool walks you through four steps, one screen at a time.
+The screen has two parts.
 
-### 1. Your CV
+### On the left: your CV
 
-Put in the exact file that you send to employers. The tool accepts `.pdf`, `.docx`,
-`.txt` and `.md`. As an alternative, put in the text. Use the real file and not a
-corrected copy, because the file is one half of the test.
+The white sheet is the document. Click any line and change it. There is no separate form
+and no preview, because the sheet is the file that you send.
 
-### 2. The job
+- **Enter** in a list makes the next item. **Backspace** on an empty item removes it.
+- The controls that add and remove a part appear when the pointer is on that part.
+- A paste keeps the words and discards the formatting, because formatting from another
+  program is the thing that breaks a CV.
+- The document stays in this browser. Nothing goes to a server.
 
-Put in the job advert. This is optional. With the advert, you also get a score for the
-agreement between your words and the job. Without the advert, you get a score for the
-format and the structure, from 75 points and not from 100 points.
+Four buttons at the top save the file:
 
-**You can put in a link and not the text.** Give the address of the advert and the tool
-reads it. This needs the optional second part (see
-[Optional extras](#optional-extras-advanced)), because a browser cannot get data from a
-different site. The tool operates with most job boards. Some sites show the advert only
-after you sign in. If the tool cannot read your advert, copy the text and put it in.
-
-**The tool operates for any job.** It reads the advert and finds the applicable field.
-Then it gives a score against the vocabulary of that field: clinical terms for a nursing
-advert, accounting terms for an accounting advert. There are sample adverts from six
-fields. A job in an unknown field also operates, because the tool counts the terms that
-occur many times in the advert.
-
-### 3. Results
-
-Five things to look at, one at a time:
-
-| Tab | What it tells you |
+| File | Use it for |
 |---|---|
-| **Score** | Your total, and how it breaks down |
-| **Do these first** | The handful of fixes worth the most points |
-| **Keywords** | Words the advert leans on that your CV never says |
-| **What software sees** | The data that a computer got. Make sure that it is correct |
-| **All checks** | Every single test, with the reason for its score |
+| **DOCX** | Application forms. Programs read this format most reliably. |
+| **PDF** | Email and your own records. Your browser prints it, thus it has real text. |
+| **Markdown** | A copy in a repository. |
+| **Text** | The exact text that a hiring program reads. |
 
-**The tab "What software sees" is the most useful tab.** If your email address or your
-job dates are not there, they are also not there for each employer.
+### On the right: the score
 
-### 4. Rebuild
+Put the advert in the box, or give a link and press **Read**. There are also sample
+adverts from six fields.
 
-The tool writes your CV again in a clean form. Select one of three layouts, look at the
-score before and after, then download the file.
+Press **Check the ATS score**. You get the number, the band and the five groups of
+points. After that, the score follows the document as you write.
 
-| Layout | What it does | Choose it when |
-|---|---|---|
-| **Classic** | Summary, experience, education, skills | You are not sure. This is the safe default |
-| **Compact** | No summary, skills on one line | You have many jobs and want them on page one |
-| **Skills first** | Skills above your job history | You are changing field, or the advert is tool-heavy |
+Press **View details** for the full breakdown: the fixes worth the most points, the
+keywords from the advert that your CV does not use, and each check with the test that it
+ran.
 
-**Which file must I send?** Send the **DOCX** file. Programs read this format most
-reliably. The PDF file is also correct, because your browser prints it and the text stays
-readable. Use Markdown to edit your own copy. Do not send it.
+**It works for any job.** The tool reads the advert, finds the applicable field, and
+gives a score against the vocabulary of that field: clinical terms for a nursing advert,
+accounting terms for an accounting advert. A field with no pack also operates, because
+the tool counts the terms that occur many times in the advert.
 
 ---
 
@@ -219,28 +203,28 @@ text and use that address.
 **The page is empty, or nothing occurs**
 Make sure that the terminal is open and shows the `Local:` address.
 
-**My score is 0 and the tool says "The file contains no text"**
-The tool operates correctly. This is not a fault. Your PDF contains pictures of letters
-and not letters. This occurs when a design tool such as Figma, Sketch or Canva exports a
-PDF. Make the file again in Word or Google Docs, or send the DOCX file.
+**My CV disappeared**
+The CV is in the local store of this browser. It is not in your account and it is not on
+a server. A different browser, a different computer or a private window shows a new
+document. Keep a copy with the Markdown button.
 
-**You can do this test on any file.** Open the file, press `Ctrl`+`A`, then press
-`Ctrl`+`C`. Put the result in a notepad. If the result is not clear readable text, no
-hiring software can read the file.
+**The link to the advert does not work**
+The link reader needs the optional second part. See
+[Optional extras](#optional-extras-advanced). Some sites also show the advert only after
+you sign in. Copy the text and put it in the box.
 
-**The tool says that there is not sufficient text**
-The tool could not get sufficient readable text from your file. Make the original file
-again in Word or Google Docs, then try again. If the tool shows a warning but gives you
-a result, read that result with care. The tool keeps each word, but it can put some text
-in the incorrect section.
+**How do I know that the file I send has real text?**
+Open the file that you downloaded, press `Ctrl`+`A`, then press `Ctrl`+`C`. Put the
+result in a notepad. It must be clear readable text. A file from this tool always passes
+that test, because each file comes from the same text.
 
 ---
 
 ## Optional extras (advanced)
 
-This step is optional. It adds two functions. First, a second reader for PDF files. Thus
-the tool can tell you when two readers do not agree about your file, which is an
-important warning. Second, the tool can read a job advert from a link.
+This step is optional. It adds one function to the editor: the tool can read a job
+advert from a link. A browser cannot get data from a different site, thus this work
+happens in a small program on your own machine.
 
 Open a **second** terminal window, go to the project folder, and run:
 
@@ -248,18 +232,10 @@ Open a **second** terminal window, go to the project folder, and run:
 npm run dev:api
 ```
 
-The web page finds the second part automatically. The second reader also needs a free
-tool with the name `poppler`:
-
-```bash
-# Mac
-brew install poppler
-
-# Debian / Ubuntu Linux
-sudo apt-get install poppler-utils
-```
-
-Without `poppler`, the tool operates. It shows that the second reader is not available.
+The web page finds it automatically. The same program also gives an API that reads PDF
+and DOCX files with two independent readers and reports a difference between them. The
+editor does not use that API. It is there for scripts and for CI. See the API section
+below.
 
 ---
 
@@ -267,13 +243,13 @@ Without `poppler`, the tool operates. It shows that the second reader is not ava
 
 Yes. These are the reasons:
 
-- **The tool uploads nothing.** It reads your CV in your browser and the CV stays there.
+- **The tool uploads nothing.** You write your CV in your browser and it stays there.
 - **There are no accounts, no tracking and no analytics.** You do not sign up.
 - **The project contains no secrets and no keys.**
+- **The Inter font is part of the project.** The page does not request a font from
+  another site.
 - **The optional server listens only to your own computer.** A website cannot reach it.
   If you put the server on the internet, set `ALLOWED_ORIGIN` to your address.
-- **A file has a limit of 8 MB.** The server keeps the file in memory and removes it when
-  it sends the answer.
 - **The example CV is not a real person.** It contains no data about a real person.
 
 If you find a security problem, please open an issue on GitHub.
@@ -286,7 +262,7 @@ If you find a security problem, please open an issue on GitHub.
 ## Layout
 
 ```
-packages/core   @ats/core   The scoring engine and the rebuilder. Pure, no runtime deps.
+packages/core   @ats/core   The scoring engine and the CV document. Pure, no runtime deps.
 apps/web        @ats/web    React single page. Vite, TypeScript, CSS with design tokens.
 apps/api        @ats/api    Express. Optional. It adds the second PDF reader.
 ```
@@ -351,18 +327,6 @@ If a check cannot operate, for example when the tool cannot read a job title fro
 advert, the tool removes the check from the total. It does not give half of the points.
 The opposite is also true: the check for a link to your work counts only in fields that
 expect one. An accountant with no portfolio does nothing incorrect.
-
-## Rebuilding
-
-`parseCv` turns flat text back into structure; three templates render it to text,
-Markdown and HTML. Exports are real OOXML (via `docx`) for Word, and the browser's own
-print pipeline for PDF, so both carry genuine text layers.
-
-**It checks its own work.** The parser is heuristic, and on a CV whose text layer is
-already broken it fails badly. `rebuildCv` compares words in against words retained and
-refuses the result if more than one tenth of the words are missing. A "corrected" CV
-that lost two jobs does real damage to the user. The tool discards nothing: each block
-with no section goes below "Additional information".
 
 ## API
 

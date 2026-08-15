@@ -1,265 +1,130 @@
-import { useCallback, useMemo, useState } from 'react';
-import { scoreResume, type EngineResult, type ExtractionDiagnostics } from '@ats/core';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { renderCvText, scoreResume, starterDoc, type CvDoc } from '@ats/core';
 
-import { GithubIcon, LinkedinIcon } from './components/Icons.js';
-import { HardFailure } from './components/HardFailure.js';
+import { CvEditor } from './components/CvEditor.js';
 import { HowItScores } from './components/HowItScores.js';
-import { JobPanel, ResumePanel } from './components/InputPanels.js';
-import { Parsing, type StageId } from './components/Parsing.js';
-import { Rebuild } from './components/Rebuild.js';
-import { Results } from './components/Results.js';
-import { StepRail, type Step } from './components/StepRail.js';
+import { GithubIcon, LinkedinIcon } from './components/Icons.js';
+import { ScorePanel } from './components/ScorePanel.js';
 import { ThemeToggle } from './components/ThemeToggle.js';
-import { extractFile } from './lib/extract.js';
+import { exportDocx, exportMarkdown, exportPdf, exportText } from './lib/exporters.js';
 import { useTheme } from './lib/useTheme.js';
 
-interface Extraction {
-  engines: EngineResult[];
-  enginesDisagree: boolean;
-  diagnostics?: ExtractionDiagnostics;
-}
+const STORE_KEY = 'ats-cv-scoring:doc';
 
-const NO_EXTRACTION: Extraction = { engines: [], enginesDisagree: false };
+/** The document stays in this browser. Nothing about it goes to another machine. */
+function loadDoc(): CvDoc {
+  try {
+    const raw = window.localStorage.getItem(STORE_KEY);
+    if (!raw) return starterDoc();
+    const parsed = JSON.parse(raw) as CvDoc;
+    if (parsed && Array.isArray(parsed.sections)) return parsed;
+  } catch {
+    /* A damaged record must not stop the editor. Start a new document instead. */
+  }
+  return starterDoc();
+}
 
 export default function App() {
   const { isDark, toggle, flashing } = useTheme();
 
-  const [step, setStep] = useState<Step>('cv');
-  const [resume, setResume] = useState('');
+  const [doc, setDoc] = useState<CvDoc>(loadDoc);
   const [jobDescription, setJobDescription] = useState('');
   const [muted, setMuted] = useState<string[]>([]);
-  const [extraction, setExtraction] = useState<Extraction>(NO_EXTRACTION);
-  const [status, setStatus] = useState('No file loaded');
-  const [parsing, setParsing] = useState<{ filename: string; stage: StageId } | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
 
-  // Each reader that operated, not only the best one. The server sends back the reader
-  // that got the most text. If you use only that reader, you hide the condition where a
-  // second reader got no text.
-  const engineDiagnostics = useMemo(
-    () => extraction.engines.filter((e) => e.ok).map((e) => e.diagnostics),
-    [extraction.engines],
-  );
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(STORE_KEY, JSON.stringify(doc));
+      } catch {
+        /* A full or blocked store is not a reason to stop the editor. */
+      }
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [doc]);
 
-  // The score is a pure function and it is quick. Thus it operates for each key that you
-  // press. The interface does not need a button.
+  const text = useMemo(() => renderCvText(doc), [doc]);
+
+  // The score follows the document. After you ask for it, it stays current as you write.
   const report = useMemo(
-    () =>
-      resume.trim() || extraction.diagnostics
-        ? scoreResume({
-            text: resume,
-            jobDescription,
-            mutedKeywords: muted,
-            diagnostics: extraction.diagnostics,
-            engines: engineDiagnostics,
-          })
-        : null,
-    [resume, jobDescription, muted, extraction.diagnostics, engineDiagnostics],
+    () => (checked ? scoreResume({ text, jobDescription, mutedKeywords: muted }) : null),
+    [checked, text, jobDescription, muted],
   );
-
-  const handleFile = useCallback(async (file: File) => {
-    setMuted([]);
-    setParsing({ filename: file.name, stage: 'read' });
-
-    // Each stage is a real event. On a small file, all the stages can occur in a few
-    // milliseconds. A minimum time for each stage makes the sequence readable. The
-    // program waits for the chain before it shows the result. Thus the last stage cannot
-    // occur before the work is complete.
-    let chain = Promise.resolve();
-    const paced = (stage: StageId) => {
-      chain = chain.then(
-        () =>
-          new Promise<void>((resolve) => {
-            setParsing({ filename: file.name, stage });
-            window.setTimeout(resolve, 240);
-          }),
-      );
-    };
-
-    try {
-      const outcome = await extractFile(file, paced);
-      await chain;
-      setResume(outcome.text);
-      setExtraction({
-        engines: outcome.engines,
-        enginesDisagree: outcome.enginesDisagree,
-        diagnostics: outcome.diagnostics,
-      });
-      const chars = outcome.diagnostics?.characters ?? outcome.text.replace(/\s/g, '').length;
-      setStatus(`${outcome.filename} · ${outcome.primaryEngine} · ${chars.toLocaleString()} characters`);
-      setStep('job');
-    } catch (err) {
-      setStatus(`The program could not read that file. ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setParsing(null);
-    }
-  }, []);
-
-  // New text replaces the text from the reader. Thus the data of the reader does not
-  // apply.
-  const handleResumeText = useCallback((text: string) => {
-    setResume(text);
-    setExtraction(NO_EXTRACTION);
-    setStatus(text.trim() ? 'Pasted text' : 'No file loaded');
-  }, []);
 
   const toggleKeyword = useCallback((term: string) => {
     setMuted((prev) => (prev.includes(term) ? prev.filter((t) => t !== term) : [...prev, term]));
   }, []);
 
-  const startOver = useCallback(() => {
-    setResume('');
-    setJobDescription('');
-    setMuted([]);
-    setExtraction(NO_EXTRACTION);
-    setStatus('No file loaded');
-    setStep('cv');
-  }, []);
+  const run = async (name: string, fn: () => void | Promise<void>) => {
+    setBusy(name);
+    try {
+      await fn();
+    } catch (err) {
+      alert(`The program could not make the file. ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusy(null);
+    }
+  };
 
-  const hasResume = Boolean(resume.trim() || extraction.diagnostics);
+  const startAgain = () => {
+    if (!window.confirm('This removes your CV from this browser and starts a new one. Continue?')) return;
+    setDoc(starterDoc());
+    setChecked(false);
+    setMuted([]);
+  };
 
   return (
-    <div className="page">
+    <div className="app">
       {flashing && <div className="theme-flash" aria-hidden />}
 
-      <header className="masthead">
+      <header className="topbar">
         <HowItScores />
-        <ThemeToggle isDark={isDark} onToggle={toggle} />
+        <div className="topbar-actions">
+          <button type="button" className="button" disabled={busy !== null} onClick={() => run('docx', () => exportDocx(doc))}>
+            {busy === 'docx' ? 'Building…' : 'Download DOCX'}
+          </button>
+          <button type="button" className="button button-ghost" disabled={busy !== null} onClick={() => run('pdf', () => exportPdf(doc))}>
+            PDF
+          </button>
+          <button type="button" className="button button-ghost" disabled={busy !== null} onClick={() => run('md', () => exportMarkdown(doc))}>
+            Markdown
+          </button>
+          <button type="button" className="button button-ghost" disabled={busy !== null} onClick={() => run('txt', () => exportText(doc))}>
+            Text
+          </button>
+          <button type="button" className="button button-quiet" onClick={startAgain}>
+            Start again
+          </button>
+          <ThemeToggle isDark={isDark} onToggle={toggle} />
+        </div>
       </header>
 
-      <StepRail current={step} hasResume={hasResume} onGo={setStep} />
-
-      {step === 'cv' && (
-        <div className="panel">
-          <div className="step-head">
-            <h2>Start with your CV</h2>
-          </div>
-          {parsing ? (
-            <div className="card">
-              <Parsing filename={parsing.filename} stage={parsing.stage} />
-            </div>
-          ) : (
-            <ResumePanel value={resume} status={status} onChange={handleResumeText} onFile={handleFile} />
-          )}
-          {hasResume && !parsing && (
-            <div className="button-row">
-              <button type="button" className="button button-next" onClick={() => setStep('job')}>
-                Next
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-                  <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-          )}
+      <main className="workspace">
+        <div className="canvas">
+          <CvEditor doc={doc} onChange={setDoc} />
+          <p className="canvas-note">
+            Click any line to change it. This CV stays in this browser. Send the DOCX file to application forms.
+          </p>
         </div>
-      )}
 
-      {step === 'job' && (
-        <div className="panel">
-          <div className="step-head">
-            <h2>Add the job posting</h2>
-          </div>
-          <JobPanel value={jobDescription} onChange={setJobDescription} />
-          <div className="button-row">
-            <button type="button" className="button button-next" onClick={() => setStep('results')}>
-              {jobDescription.trim() ? 'See results' : 'Skip and see results'}
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-                <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            <button type="button" className="button button-quiet" onClick={() => setStep('cv')}>
-              Back
-            </button>
-          </div>
-        </div>
-      )}
-
-      {step === 'results' && (
-        <div className="panel">
-          {!report ? (
-            <p className="empty-state">Add a CV. Then the score comes on this page.</p>
-          ) : report.hardFailure ? (
-            <div className="card">
-              <HardFailure failure={report.hardFailure} />
-            </div>
-          ) : (
-            <>
-              <Results
-                report={report}
-                engines={extraction.engines}
-                enginesDisagree={extraction.enginesDisagree}
-                onToggleKeyword={toggleKeyword}
-              />
-              <p className="footnote">
-                This number is ours. No hiring system gives a score from 100. Greenhouse puts people into five
-                groups and states in its documentation that it does not refuse or advance a person by itself.
-                Workday gives a grade from A to D. A recruiter makes the decision. Use this number to compare one
-                version of your CV with the next version, and for nothing more. One rule is true for each system:
-                if the software cannot get a field, nobody can search for it.
-              </p>
-            </>
-          )}
-          <div className="button-row">
-            {report && !report.hardFailure && (
-              <button type="button" className="button button-next" onClick={() => setStep('rebuild')}>
-                Rebuild my CV
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-                  <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            )}
-            <button type="button" className="button button-ghost" onClick={() => setStep('job')}>
-              Edit the posting
-            </button>
-            <button type="button" className="button button-quiet" onClick={startOver}>
-              Start over
-            </button>
-          </div>
-        </div>
-      )}
-
-      {step === 'rebuild' && (
-        <div className="panel">
-          <div className="step-head">
-            <h2>Rebuild it cleanly</h2>
-            <p>
-              This is your CV in a form that software can read: one column, usual headings, dates that a
-              program can parse and contact data as usual text. The words stay the same. Only the format
-              changes.
-            </p>
-          </div>
-          {!report || report.hardFailure ? (
-            <p className="empty-state">Add a CV that the program can read.</p>
-          ) : (
-            <Rebuild text={resume} jobDescription={jobDescription} currentScore={report.score} />
-          )}
-          <div className="button-row">
-            <button type="button" className="button button-ghost" onClick={() => setStep('results')}>
-              Back to results
-            </button>
-            <button type="button" className="button button-quiet" onClick={startOver}>
-              Start over
-            </button>
-          </div>
-        </div>
-      )}
+        <ScorePanel
+          jobDescription={jobDescription}
+          onJobDescription={setJobDescription}
+          report={report}
+          checked={checked}
+          onCheck={() => setChecked(true)}
+          onToggleKeyword={toggleKeyword}
+        />
+      </main>
 
       <footer className="site-footer">
         <p className="footer-copy">© 2026</p>
         <div className="footer-links">
-          <a
-            className="footer-link"
-            href="https://github.com/itsbyferdi"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a className="footer-link" href="https://github.com/itsbyferdi" target="_blank" rel="noopener noreferrer">
             <GithubIcon /> Github
           </a>
-          <a
-            className="footer-link"
-            href="https://www.linkedin.com/in/hafidhferdi/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a className="footer-link" href="https://www.linkedin.com/in/hafidhferdi/" target="_blank" rel="noopener noreferrer">
             <LinkedinIcon /> LinkedIn
           </a>
         </div>

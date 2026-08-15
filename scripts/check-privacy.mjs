@@ -15,7 +15,6 @@
  * Optionally start the API too (npm run dev:api) to cover the second reader as well.
  */
 import { createRequire } from 'node:module';
-import { readFileSync } from 'node:fs';
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:5173/';
 const MARKER = 'PRIVACY-CANARY-9f3a2b';
@@ -27,11 +26,6 @@ try {
   console.error('Playwright is not installed. Run: npx playwright install chromium');
   process.exit(2);
 }
-
-const cv = readFileSync(
-  new URL('../packages/core/src/__tests__/fixtures/optimised-single-column.txt', import.meta.url),
-  'utf8',
-);
 
 const isLocal = (url) => {
   if (url.startsWith('data:') || url.startsWith('blob:')) return true;
@@ -64,20 +58,29 @@ const step = async (fn) => {
 };
 
 await page.goto(BASE, { waitUntil: 'networkidle' });
-await page.fill('#resume-text', `${cv}\n${MARKER}`);
-await page.waitForTimeout(600);
-await step(() => page.click('.button-next'));
+await page.evaluate(() => localStorage.clear());
+await page.reload({ waitUntil: 'networkidle' });
+await page.waitForTimeout(700);
+
+// Write the marker into the document, then use every part of the tool.
+await step(async () => {
+  await page.locator('.cv-name').click();
+  await page.keyboard.press('Meta+A');
+  await page.keyboard.type(`Marker ${MARKER}`);
+});
 await page.waitForTimeout(400);
 await step(() => page.click('.chip:has-text("Product design")'));
 await page.waitForTimeout(400);
-await step(() => page.click('.button-next'));
-await page.waitForTimeout(1000);
-for (const tab of ['Do these first', 'Keywords', 'What software sees', 'All checks']) {
-  await step(() => page.click(`[role=tab]:has-text("${tab}")`));
+await step(() => page.click('.check-button'));
+await page.waitForTimeout(900);
+await step(() => page.click('.details-button'));
+await page.waitForTimeout(700);
+for (const tab of ['Do these first', 'Keywords', 'All checks']) {
+  await step(() => page.click(`.details-popup [role=tab]:has-text("${tab}")`));
   await page.waitForTimeout(250);
 }
-await step(() => page.click('text=Rebuild my CV'));
-await page.waitForTimeout(1200);
+await step(() => page.keyboard.press('Escape'));
+await page.waitForTimeout(400);
 await step(() => page.click('.how-trigger'));
 await page.waitForTimeout(400);
 

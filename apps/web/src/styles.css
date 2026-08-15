@@ -179,71 +179,6 @@ button { font: inherit; color: inherit; }
   animation: themeFlash var(--dur-expressive) var(--ease-theme) forwards;
 }
 
-/* ── shell ──────────────────────────────────────────────────────────────
-   One column, one item at a time. The page stays simple and the eye has one
-   place to look. */
-.page {
-  max-width: 760px; margin: 0 auto; padding: 28px 20px 24px;
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex; flex-direction: column;
-}
-
-.masthead {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; padding-bottom: 32px;
-}
-.masthead h1 {
-  font-size: 14px; font-weight: var(--w-medium);
-  letter-spacing: var(--tracking-tight);
-}
-.subtitle { color: var(--muted); font-weight: var(--w-book); }
-
-.theme-toggle {
-  width: 34px; height: 34px; flex: none;
-  display: grid; place-items: center;
-  background: transparent; border: 1px solid var(--line);
-  border-radius: var(--r-round); color: var(--ink-2); cursor: pointer;
-  transition: background-color var(--dur-slow) var(--ease-standard),
-    border-color var(--dur-slow) var(--ease-standard),
-    color var(--dur-slow) var(--ease-standard);
-}
-.theme-toggle:hover { background: var(--surface-hover); color: var(--ink); border-color: var(--line-strong); }
-.theme-toggle:active { transform: scale(0.94); transition: transform var(--dur-recoil) var(--ease-standard); }
-.theme-toggle svg { display: block; }
-.theme-toggle .icon-sun, .theme-toggle .icon-moon {
-  transition: opacity var(--dur-base) var(--ease-standard), transform var(--dur-slow) var(--ease-spring);
-}
-
-/* ── step rail ──────────────────────────────────────────────────────────
-   The steps are always visible. Thus you know your position without a diagram. */
-.rail { display: flex; align-items: center; gap: 6px; margin-bottom: 22px; }
-.rail-step {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 6px 12px 6px 8px; border-radius: var(--r-round);
-  background: transparent; border: 1px solid transparent;
-  color: var(--muted); font-size: 11.5px; cursor: pointer;
-  transition: color var(--dur-base) var(--ease-standard),
-    background-color var(--dur-base) var(--ease-standard),
-    border-color var(--dur-base) var(--ease-standard);
-}
-.rail-step:hover:not(:disabled) { color: var(--ink); background: var(--surface-hover); }
-.rail-step:disabled { cursor: default; opacity: 0.55; }
-.rail-step[aria-current='step'] { color: var(--ink); border-color: var(--line); background: var(--surface); }
-.rail-num {
-  width: 19px; height: 19px; flex: none; border-radius: var(--r-round);
-  display: grid; place-items: center; font-size: 11px; font-variant-numeric: tabular-nums;
-  background: var(--track); color: var(--ink-2); box-sizing: border-box;
-  transition: background-color var(--dur-base) var(--ease-standard), color var(--dur-base) var(--ease-standard);
-}
-.rail-step[aria-current='step'] .rail-num { background: var(--inverse); color: var(--on-inverse); }
-.rail-step-done .rail-num {
-  background: transparent; color: var(--ink);
-  border: 1px solid var(--line-strong);
-}
-.rail-line { flex: 1; height: 1px; background: var(--line); }
-.rail-num .tick, .stage-dot .tick { display: block; }
-
 /* ── panels ─────────────────────────────────────────────────────────────
    Each step comes on the screen with the motion from rows.gg. It moves a small
    quantity past its position, then stops. It is short and does not delay you. */
@@ -267,10 +202,6 @@ button { font: inherit; color: inherit; }
 .hint { color: var(--ink-2); font-size: 12px; margin: 6px 0 14px; }
 .status { color: var(--muted); font-size: 11px; margin-top: 10px; }
 
-.step-head { margin-bottom: 18px; }
-.step-head h2 { font-size: 22px; letter-spacing: var(--tracking-tighter); font-weight: var(--w-medium); }
-.step-head p { margin-top: 6px; color: var(--ink-2); font-size: 12.5px; max-width: 60ch; }
-
 textarea {
   width: 100%; min-height: 148px; resize: vertical;
   background: var(--page); color: var(--ink);
@@ -280,20 +211,6 @@ textarea {
 }
 textarea:hover { border-color: var(--line-strong); }
 textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; border-color: transparent; }
-
-.dropzone {
-  display: block; width: 100%; margin-bottom: 12px; padding: 32px 16px;
-  border: 1px dashed var(--line-strong); border-radius: var(--r-lg); background: var(--page);
-  color: var(--ink-2); text-align: center; cursor: pointer;
-  transition: border-color var(--dur-base) var(--ease-standard),
-    background-color var(--dur-base) var(--ease-standard),
-    transform var(--dur-base) var(--ease-spring);
-}
-.dropzone:hover { border-color: var(--ink); background: var(--surface-hover); }
-.dropzone-over { border-color: var(--ink); background: var(--surface-hover); transform: scale(1.01); }
-.dropzone:active { transform: scale(0.995); transition-duration: var(--dur-recoil); }
-.dropzone b { display: block; color: var(--ink); font-weight: var(--w-medium); font-size: 13px; }
-.dropzone small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
 
 /* ── buttons ────────────────────────────────────────────────────────────
    The primary button is solid ink. The secondary button is quiet. Each button
@@ -320,55 +237,6 @@ textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; bor
 .button-next svg { transition: transform var(--dur-slow) var(--ease-spring); }
 .button-next:hover svg { transform: translateX(3px); }
 
-/* ── parsing ────────────────────────────────────────────────────────────
-   Two readers read a CV, and this can take some seconds. A name for each stage
-   is more accurate than a spinner, and it shows the operation of the tool. */
-@keyframes stageEnter {
-  0% { opacity: 0; transform: scale(0.5); }
-  55% { opacity: 1; transform: scale(1.09); }
-  100% { opacity: 1; transform: scale(1); }
-}
-@keyframes ringTurn {
-  to { transform: rotate(360deg); }
-}
-@keyframes sweep {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-.parsing { padding: 6px 0 2px; }
-.parsing-bar {
-  height: 2px; border-radius: 2px; background: var(--track);
-  overflow: hidden; margin-bottom: 18px;
-}
-.parsing-bar i {
-  display: block; height: 100%; width: 40%; border-radius: 2px; background: var(--ink);
-  animation: sweep 1.1s var(--ease-standard) infinite;
-}
-.stages { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.stage { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: center; font-size: 12px; }
-.stage-dot {
-  width: 16px; height: 16px; flex: none; box-sizing: border-box;
-  border-radius: var(--r-round);
-  display: grid; place-items: center;
-  background: none;
-  border: 1.5px dashed var(--line-strong);
-  color: var(--ink);
-}
-/* Turning slowly and at a constant rate. An eased spin looks like it is stuttering. */
-.stage-active .stage-dot {
-  border-color: var(--ink);
-  animation: ringTurn 2.4s linear infinite;
-}
-/* Finished: the ring goes, the tick arrives on the spring curve. */
-.stage-done .stage-dot {
-  border-color: transparent;
-  color: var(--ink);
-  animation: stageEnter var(--dur-expressive) var(--ease-spring) both;
-}
-.stage-waiting { color: var(--muted); }
-.stage-active { color: var(--ink); }
-.stage-done { color: var(--ink-2); }
-
 /* ── segmented view switch ──────────────────────────────────────────────*/
 .segmented {
   display: flex; gap: 2px; padding: 3px; margin-bottom: 18px;
@@ -386,53 +254,12 @@ textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; bor
 .segment:active { transform: scale(0.97); transition-duration: var(--dur-recoil); }
 
 /* ── rebuild ────────────────────────────────────────────────────────────*/
-.template-picker { display: grid; gap: 8px; margin-bottom: 12px; }
-@media (min-width: 640px) { .template-picker { grid-template-columns: repeat(3, 1fr); } }
-.template-option {
-  display: grid; gap: 5px; text-align: left; cursor: pointer;
-  padding: 14px; border: 1px solid var(--line); border-radius: var(--r-lg);
-  background: var(--surface); color: var(--ink);
-  transition: border-color var(--dur-base) var(--ease-standard),
-    background-color var(--dur-base) var(--ease-standard);
-}
-.template-option:hover { border-color: var(--line-strong); }
-.template-option:active { transform: scale(0.99); transition-duration: var(--dur-recoil); }
-.template-option[data-checked], .template-option[aria-checked='true'] { border-color: var(--ink); background: var(--surface-2); }
-.template-name { font-size: 12.5px; font-weight: var(--w-medium); }
-.template-blurb { font-size: 11px; color: var(--ink-2); line-height: 1.5; }
+@media (min-width: 640px) {  }
 
 .rebuild-summary { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.delta { display: flex; align-items: center; gap: 10px; color: var(--muted); flex: none; }
-.delta-from { font-size: 20px; font-variant-numeric: tabular-nums; }
-.delta-to {
-  font-size: 28px; font-weight: var(--w-medium); color: var(--ink);
-  letter-spacing: var(--tracking-tighter); font-variant-numeric: tabular-nums;
-  animation: stageEnter var(--dur-expressive) var(--ease-spring) both;
-}
-.delta-up { color: var(--good); }
-.export-row { margin-top: 14px; }
-
-.problem-list { margin: 12px 0 14px; padding-left: 18px; display: grid; gap: 6px; font-size: 12px; color: var(--ink-2); }
 
 /* The preview is the document. Thus it looks like paper and not like the other parts of
    the interface. The document is the item that gets the score. */
-.cv-preview {
-  margin-top: 12px; padding: 28px 30px;
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
-  font-size: 13px; line-height: 1.5; max-height: 620px; overflow: auto;
-}
-.cv-preview h1 { font-size: 20px; letter-spacing: var(--tracking-tighter); margin-bottom: 2px; }
-.cv-preview h2 {
-  font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink);
-  margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid var(--line);
-}
-.cv-preview h3 { font-size: 13.5px; margin: 14px 0 1px; }
-.cv-preview p { margin: 0 0 5px; }
-.cv-preview .cv-headline { font-weight: var(--w-medium); }
-.cv-preview .cv-contact { color: var(--ink-2); font-size: 12.5px; }
-.cv-preview .cv-meta { color: var(--ink-2); font-size: 12.5px; }
-.cv-preview ul { margin: 6px 0 0; padding-left: 18px; }
-.cv-preview li { margin-bottom: 4px; }
 
 /* ── score header ───────────────────────────────────────────────────────*/
 .score-header { display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
@@ -531,33 +358,9 @@ textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; bor
 .legend, .muted-text { font-size: 11px; color: var(--muted); margin-top: 10px; }
 
 /* ── machine view ───────────────────────────────────────────────────────*/
-.fields { display: grid; gap: 8px; margin: 12px 0 0; font-size: 12px; }
-.field { display: grid; grid-template-columns: 112px 1fr; gap: 10px; }
-.field dt { color: var(--muted); font-size: 11px; }
-.field dd { margin: 0; word-break: break-word; }
-.field-empty { color: var(--critical); }
-
-.alert {
-  margin: 10px 0 14px; padding: 11px 13px; font-size: 11.5px; color: var(--ink);
-  background: var(--alert-bg); border: 1px solid var(--line); border-radius: var(--r-md);
-}
-
-.engines { width: 100%; margin-top: 16px; border-collapse: collapse; font-size: 11.5px; }
-.engines caption { text-align: left; color: var(--muted); font-size: 11px; padding-bottom: 8px; }
-.engines th, .engines td { text-align: right; padding: 8px; border-bottom: 1px solid var(--line); font-weight: var(--w-book); }
-.engines thead th { color: var(--muted); font-size: 10.5px; }
-.engines th[scope='row'] { text-align: left; color: var(--ink); }
-.engines td { font-variant-numeric: tabular-nums; }
 
 details summary { cursor: pointer; color: var(--ink-2); font-size: 12px; padding: 10px 0 4px; }
 details summary:hover { color: var(--ink); }
-.raw-text {
-  background: var(--page); border: 1px solid var(--line); border-radius: var(--r-md);
-  padding: 13px; max-height: 300px; overflow: auto;
-  font-family: var(--font);
-  font-size: 11px; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
-  color: var(--ink-2); margin: 10px 0 0;
-}
 
 .empty-state { color: var(--muted); text-align: center; padding: 52px 16px; font-size: 12.5px; }
 .footnote {
@@ -582,36 +385,8 @@ details summary:hover { color: var(--ink); }
    own ring, which is blue. This interface has no blue. Each control gets one
    visible ring in the ink colour. */
 .segment:focus-visible,
-.template-option:focus-visible,
-.chip:focus-visible,
-.button:focus-visible,
-.rail-step:focus-visible,
-.theme-toggle:focus-visible,
-.dropzone:focus-visible,
-details summary:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-  border-radius: var(--r-sm);
-}
-.template-option:focus-visible { border-radius: var(--r-lg); }
-.chip:focus-visible, .rail-step:focus-visible, .theme-toggle:focus-visible { border-radius: var(--r-round); }
-
+.chip:focus-visible, 
 /* A warning that permits you to continue. */
-.notice {
-  margin-bottom: 12px; padding: 14px 16px;
-  background: var(--alert-bg); border: 1px solid var(--line); border-radius: var(--r-lg);
-}
-.notice-head {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12.5px; font-weight: var(--w-medium); color: var(--ink);
-}
-.notice-head span {
-  width: 16px; height: 16px; flex: none; border-radius: var(--r-round);
-  display: grid; place-items: center; font-size: 10px;
-  background: var(--serious); color: var(--page);
-}
-.notice .problem-list { margin: 8px 0 8px 4px; font-size: 11.5px; }
-.notice-foot { font-size: 11px; color: var(--ink-2); }
 
 /* ── job link import ────────────────────────────────────────────────────*/
 .url-row { display: flex; gap: 8px; margin: 6px 0 0; }
@@ -719,5 +494,180 @@ details summary:focus-visible {
 .footer-link svg { display: block; opacity: 0.85; }
 
 /* A reader that did not operate. The table gives this clearly, not as a failure. */
-.engine-off th, .engine-off td { color: var(--muted); }
-.engine-off td { text-align: left; }
+
+/* ── the workspace ──────────────────────────────────────────────────────
+   The document on the left, the advert and the score on the right. The page
+   does not scroll as a whole: each side scrolls on its own, thus the score
+   stays in view while you write. */
+@keyframes panelEnter {
+  0% { opacity: 0; transform: translateY(6px) scale(0.99); }
+  100% { opacity: 1; transform: none; }
+}
+.panel { animation: panelEnter var(--dur-expressive) var(--ease-out-expo) both; }
+
+.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 10px 16px; border-bottom: 1px solid var(--line);
+  background: var(--page); flex: none;
+}
+.topbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.topbar-actions .button { padding: 8px 14px; }
+
+.workspace {
+  flex: 1; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) 340px;
+}
+@media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } }
+
+/* ── the canvas ─────────────────────────────────────────────────────────
+   A grey table with a sheet of paper on it. The paper keeps A4 proportions
+   and the same measurements as the printed file, thus what you see is the
+   file that you send. */
+.canvas {
+  overflow-y: auto; padding: 28px 24px 56px;
+  background: var(--surface-2);
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.canvas-note { font-size: 11px; color: var(--muted); max-width: 794px; }
+
+.paper {
+  width: 100%; max-width: 794px;   /* A4 at 96dpi */
+  min-height: 1000px;
+  padding: 56px 60px 72px;
+  background: var(--paper); color: var(--paper-ink);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: var(--shadow-md);
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+  font-size: 13px; line-height: 1.55;
+}
+
+/* ── editable text ──────────────────────────────────────────────────────
+   Nothing is drawn around a field until you go near it. The document must
+   look like a document, not like a form. */
+.editable {
+  outline: none; border-radius: 3px;
+  padding: 1px 3px; margin: -1px -3px;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+  min-width: 1ch;
+}
+.editable:hover { background: var(--edit-hover); }
+.editable:focus { background: var(--edit-focus); box-shadow: 0 0 0 1px var(--edit-ring); }
+.editable:empty::before {
+  content: attr(data-placeholder);
+  color: var(--paper-faint); pointer-events: none;
+}
+
+/* ── the document ───────────────────────────────────────────────────────*/
+.cv-head { margin-bottom: 22px; }
+.cv-name { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; display: block; }
+.cv-headline { font-size: 14px; color: var(--paper-ink-2); display: block; margin-top: 1px; }
+
+.cv-contact {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px;
+  margin-top: 10px; font-size: 12px;
+}
+.cv-contact-field { display: inline-flex; align-items: baseline; gap: 5px; }
+.cv-label { color: var(--paper-faint); }
+.cv-contact-value { color: var(--paper-ink-2); }
+
+.cv-section { margin-top: 22px; }
+.cv-section-head {
+  display: flex; align-items: baseline; gap: 8px;
+  border-bottom: 1px solid var(--paper-line); padding-bottom: 5px; margin-bottom: 10px;
+}
+.cv-h2 { font-size: 11.5px; color: var(--paper-ink-2); flex: 1; }
+.cv-body { font-size: 13px; color: var(--paper-ink); }
+
+.cv-row { display: block; margin-bottom: 7px; font-size: 13px; }
+.cv-row-label { font-weight: 600; display: inline; }
+.cv-row-label::after { content: ':\00a0'; }
+.cv-row-value { display: inline; }
+
+.cv-entry { margin-bottom: 16px; }
+.cv-entry-head { display: flex; align-items: baseline; gap: 12px; }
+.cv-role { font-weight: 600; flex: 1; }
+.cv-loc { color: var(--paper-ink-2); font-size: 12.5px; text-align: right; white-space: nowrap; }
+.cv-dates { color: var(--paper-ink-2); font-size: 12.5px; margin-bottom: 5px; }
+.cv-bullets { margin: 6px 0 0; padding-left: 17px; }
+.cv-bullets li { margin-bottom: 4px; }
+
+/* Controls stay invisible until the pointer is on the part that owns them. */
+.cv-add {
+  background: none; border: 1px dashed var(--paper-line); border-radius: var(--r-sm);
+  color: var(--paper-faint); font-size: 10px; padding: 2px 8px; cursor: pointer;
+  margin-top: 5px;
+  /* The space stays reserved. If these appeared and disappeared, the whole document
+     would move under the pointer. */
+  opacity: 0; transition: opacity var(--dur-base) var(--ease-standard),
+    color var(--dur-base) var(--ease-standard), border-color var(--dur-base) var(--ease-standard);
+}
+.cv-add-inline { margin-left: 4px; }
+.cv-add-section { display: flex; gap: 6px; margin-top: 20px; }
+.paper:hover .cv-add, .cv-add:focus-visible { opacity: 1; }
+.cv-add:hover { color: var(--paper-ink); border-color: var(--paper-ink); }
+
+.cv-tools { display: inline-flex; gap: 2px; opacity: 0; transition: opacity var(--dur-base) var(--ease-standard); }
+.cv-tools button {
+  background: none; border: 0; cursor: pointer; padding: 2px 5px; border-radius: var(--r-xs);
+  color: var(--paper-faint); font-size: 12px; line-height: 1;
+}
+.cv-tools button:hover { color: var(--paper-ink); background: var(--edit-hover); }
+.cv-tools-entry { padding: 2px 5px; background: none; border: 0; cursor: pointer; color: var(--paper-faint); }
+.cv-section:hover .cv-tools, .cv-entry:hover .cv-tools-entry,
+.cv-tools button:focus-visible, .cv-tools-entry:focus-visible { opacity: 1; }
+
+/* ── the side panel ─────────────────────────────────────────────────────*/
+.side {
+  overflow-y: auto; border-left: 1px solid var(--line);
+  background: var(--page); padding: 18px 16px 32px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+@media (max-width: 900px) { .side { border-left: 0; border-top: 1px solid var(--line); } }
+.side-block { display: block; }
+.side-title { font-size: 12.5px; font-weight: var(--w-medium); margin-bottom: 10px; }
+.side-textarea {
+  width: 100%; min-height: 130px; resize: vertical;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px;
+  font-family: var(--font); font-size: 12px; line-height: 1.6;
+  transition: border-color var(--dur-fast) var(--ease-standard);
+}
+.side-textarea:hover { border-color: var(--line-strong); }
+.side-textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; border-color: transparent; }
+
+.check-button { width: 100%; justify-content: center; }
+.details-button { width: 100%; margin-top: 14px; }
+
+.score-summary { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 4px; }
+.score-figure {
+  font-size: 40px; font-weight: var(--w-medium);
+  letter-spacing: var(--tracking-tighter); line-height: 1; font-variant-numeric: tabular-nums;
+}
+.score-strong { color: var(--good); }
+.score-nearly { color: var(--warning); }
+.score-needs-work { color: var(--serious); }
+.score-high-risk { color: var(--critical); }
+.score-of { font-size: 11px; color: var(--muted); }
+.score-band { margin-left: auto; font-size: 12.5px; font-weight: var(--w-medium); }
+
+.details-popup { width: min(760px, calc(100vw - 32px)); max-height: min(82vh, 780px); }
+.details-body .segmented { margin-bottom: 16px; }
+
+/* ── paper tokens ───────────────────────────────────────────────────────
+   The sheet keeps its own colours. A CV is printed on white and read on
+   white, thus the preview does not follow the dark theme. The surface around
+   it does, so the app still has one appearance. */
+:root {
+  --paper: #ffffff;
+  --paper-ink: #111111;
+  --paper-ink-2: #444444;
+  --paper-faint: #9a9a9a;
+  --paper-line: #e2e2e2;
+  --edit-hover: rgba(17, 17, 17, 0.04);
+  --edit-focus: rgba(17, 17, 17, 0.05);
+  --edit-ring: rgba(17, 17, 17, 0.18);
+}
